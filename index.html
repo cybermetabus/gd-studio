@@ -43,6 +43,7 @@
             display: flex;
             gap: 5px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
@@ -51,10 +52,11 @@
             background: #16213e;
             border: none;
             color: #888;
-            font-size: 1em;
+            font-size: 0.95em;
             cursor: pointer;
             border-radius: 8px 8px 0 0;
             transition: all 0.3s;
+            min-width: 100px;
         }
 
         .tab-btn.active {
@@ -320,36 +322,113 @@
             color: #888;
             margin-top: 5px;
         }
+
+        .vrew-preview {
+            background: #16213e;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .vrew-clip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-bottom: 1px solid #0f3460;
+        }
+
+        .vrew-clip .clip-num {
+            color: #e94560;
+            font-weight: bold;
+            min-width: 35px;
+        }
+
+        .vrew-clip .clip-type {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .type-narration {
+            background: #0a3d62;
+            color: #82ccdd;
+        }
+
+        .type-dialogue {
+            background: #6a0572;
+            color: #e0aaff;
+        }
+
+        .type-scene {
+            background: #e94560;
+            color: white;
+        }
+
+        .vrew-clip .clip-text {
+            flex: 1;
+            font-size: 0.85em;
+            color: #ccc;
+        }
+
+        .vrew-clip .clip-dur {
+            color: #888;
+            font-size: 0.8em;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .vrew-settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .vrew-settings>div {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .vrew-settings h4 {
+            color: #e94560;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <h1>GD TTS Studio</h1>
-        <p class="subtitle">대본 → TTS 자동 생성 파이프라인 v2.1 | MP3 출력 + 나레이션 묶기 + 자동 음성 매칭</p>
+        <p class="subtitle">대본 → TTS → VREW 자동 생성 파이프라인 v3.0 | MP3 + 자막 + .vrew 출력</p>
         <div class="api-key-bar">
             <span style="color:#e94560; font-weight:bold;">API Key:</span>
             <input type="password" id="apiKey" placeholder="Gemini API 키 입력...">
             <span class="status" id="apiStatus">⚪ 미입력</span>
         </div>
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('script')">1. 대본 입력</button>
-            <button class="tab-btn" onclick="switchTab('characters')">2. 캐릭터 확인</button>
+            <button class="tab-btn active" onclick="switchTab('script')">1. 대본</button>
+            <button class="tab-btn" onclick="switchTab('characters')">2. 캐릭터</button>
             <button class="tab-btn" onclick="switchTab('generate')">3. TTS 생성</button>
             <button class="tab-btn" onclick="switchTab('results')">4. 결과</button>
+            <button class="tab-btn" onclick="switchTab('vrew')">5. VREW</button>
         </div>
         <div id="tab-script" class="tab-content active">
             <label>대본 붙여넣기 (또는 파일 업로드)</label>
             <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <input type="file" id="fileInput" accept=".txt" style="flex:1;" onchange="loadFile(event)">
-                <button class="btn-secondary btn-small" onclick="loadSample()">샘플 대본 불러오기</button>
+                <button class="btn-secondary btn-small" onclick="loadSample()">샘플 대본</button>
             </div>
             <textarea id="scriptInput" rows="20" placeholder="========== 등장인물 ==========
 [캐릭터/나레이션/성별:남/나이:40대/톤:차분하고 깊은 목소리]
-[캐릭터/막순/성별:여/나이:70대/톤:거칠지만 따뜻한 할머니]
 ========== 본문 ==========
-[나레이션/담담하게] 깊은 가을이었습니다.
-[막순/걱정스럽게] &quot;소이야, 손이 시릴 텐디...&quot;"></textarea>
+[나레이션/담담하게] 깊은 가을이었습니다."></textarea>
             <div style="margin-top:15px; display:flex; gap:10px;">
                 <button class="btn-primary" onclick="parseScript()">대본 분석하기</button>
                 <span id="parseStatus" style="line-height:42px; color:#888;"></span>
@@ -363,27 +442,25 @@
             <div style="margin-top:20px;">
                 <h4 style="color:#aaa; margin-bottom:10px;">나레이션 묶기 설정</h4>
                 <div class="settings-row">
-                    <div>
-                        <label>연속 나레이션 최대 묶기 수</label>
+                    <div><label>연속 나레이션 최대 묶기 수</label>
                         <select id="mergeCount">
-                            <option value="3">3문장 (기본)</option>
-                            <option value="5" selected>5문장 (권장 - 비용절감)</option>
-                            <option value="7">7문장 (최대절감)</option>
+                            <option value="3">3문장</option>
+                            <option value="5" selected>5문장 (권장)</option>
+                            <option value="7">7문장</option>
                             <option value="10">10문장</option>
                         </select>
                     </div>
-                    <div>
-                        <label>API 호출 간격 (초)</label>
+                    <div><label>API 호출 간격 (초)</label>
                         <input type="number" id="apiDelay" value="2" min="1" max="10">
                     </div>
                 </div>
             </div>
         </div>
         <div id="tab-generate" class="tab-content">
-            <div class="stats" id="genStats">
+            <div class="stats">
                 <div class="stat-box">
                     <div class="num" id="statTotal">-</div>
-                    <div class="label">총 TTS 요청</div>
+                    <div class="label">총 TTS</div>
                 </div>
                 <div class="stat-box">
                     <div class="num" id="statDone">0</div>
@@ -395,7 +472,7 @@
                 </div>
                 <div class="stat-box">
                     <div class="num" id="statTime">-</div>
-                    <div class="label">예상 시간(분)</div>
+                    <div class="label">예상(분)</div>
                 </div>
             </div>
             <div class="progress-bar">
@@ -410,448 +487,412 @@
         <div id="tab-results" class="tab-content">
             <div style="display:flex; gap:10px; margin-bottom:15px;">
                 <button class="btn-primary" onclick="downloadAllZip()">전체 ZIP 다운로드</button>
-                <button class="btn-secondary" onclick="downloadMapping()">mapping.json 다운로드</button>
+                <button class="btn-secondary" onclick="downloadMapping()">mapping.json</button>
             </div>
             <div id="resultsList">
                 <p style="color:#888;">TTS 생성 후 결과가 표시됩니다.</p>
             </div>
         </div>
+        <div id="tab-vrew" class="tab-content">
+            <h3 style="color:#e94560; margin-bottom:15px;">VREW 프로젝트 생성</h3>
+            <div class="vrew-settings">
+                <div>
+                    <h4>비디오 설정</h4>
+                    <label>해상도</label>
+                    <select id="vrewResolution">
+                        <option value="1920x1080" selected>1920x1080 (16:9)</option>
+                        <option value="1080x1920">1080x1920 (9:16)</option>
+                        <option value="1080x1080">1080x1080 (1:1)</option>
+                    </select>
+                    <label>TTS 볼륨</label>
+                    <select id="vrewVolume">
+                        <option value="0.8">0.8 (약간 작게)</option>
+                        <option value="1.0" selected>1.0 (기본)</option>
+                        <option value="1.2">1.2 (약간 크게)</option>
+                        <option value="1.5">1.5 (크게)</option>
+                    </select>
+                </div>
+                <div>
+                    <h4>자막 설정</h4>
+                    <label>폰트</label>
+                    <select id="vrewFont">
+                        <option value="NanumSquare Neo ExtraBold-Vrew_800" selected>나눔스퀘어 네오 ExtraBold</option>
+                        <option value="Pretendard-Vrew_700">Pretendard Bold</option>
+                        <option value="NanumGothic-Vrew_700">나눔고딕 Bold</option>
+                    </select>
+                    <label>글자 크기</label>
+                    <input type="number" id="vrewFontSize" value="170" min="50" max="300">
+                    <label>글자 색상</label>
+                    <input type="text" id="vrewFontColor" value="#ffffff">
+                </div>
+            </div>
+            <h4 style="color:#aaa; margin:20px 0 10px;">클립 미리보기</h4>
+            <div class="vrew-preview" id="vrewPreview">
+                <p style="color:#888;">TTS 생성 후 미리보기가 표시됩니다.</p>
+            </div>
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <button class="btn-primary" onclick="generateVrew()" id="btnVrew">.vrew 파일 생성 & 다운로드</button>
+            </div>
+            <div class="log-area" id="vrewLog" style="margin-top:15px;"></div>
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
     <script>
-        let parsedCharacters = {};
-        let parsedLines = [];
-        let mergedLines = [];
-        let generatedClips = [];
-        let audioBlobs = {};
-        let stopRequested = false;
+        let parsedCharacters = {}, parsedLines = [], mergedLines = [], generatedClips = [], audioBlobs = {}, stopRequested = false;
+        const ALL_VOICES = [{ name: "Zephyr", desc: "Bright" }, { name: "Charon", desc: "Informative" }, { name: "Kore", desc: "Firm" }, { name: "Fenrir", desc: "Excitable" }, { name: "Leda", desc: "Youthful" }, { name: "Orus", desc: "Firm" }, { name: "Aoede", desc: "Breezy" }, { name: "Callirrhoe", desc: "Casual" }, { name: "Autonoe", desc: "Bright" }, { name: "Iapetus", desc: "Clear" }, { name: "Umbriel", desc: "Casual" }, { name: "Algieba", desc: "Smooth" }, { name: "Despina", desc: "Smooth" }, { name: "Erinome", desc: "Clear" }, { name: "Algenib", desc: "Gravelly" }, { name: "Rasalgethi", desc: "Informative" }, { name: "Laomedeia", desc: "Upbeat" }, { name: "Achernar", desc: "Soft" }, { name: "Alnilam", desc: "Firm" }, { name: "Schedar", desc: "Even" }, { name: "Gacrux", desc: "Mature" }, { name: "Pulcherrima", desc: "Forward" }, { name: "Achird", desc: "Friendly" }, { name: "Zubenelgenubi", desc: "Casual" }, { name: "Vindemiatrix", desc: "Gentle" }, { name: "Sadachbia", desc: "Lively" }, { name: "Sadaltager", desc: "Knowledgeable" }, { name: "Sulafat", desc: "Warm" }];
+        const VOICE_AUTO_MAP = { "남_아이": "Leda", "남_10대": "Leda", "남_20대": "Orus", "남_30대": "Orus", "남_청년": "Orus", "남_40대": "Charon", "남_50대": "Charon", "남_중년": "Charon", "남_60대": "Fenrir", "남_70대": "Fenrir", "남_노년": "Fenrir", "여_아이": "Leda", "여_10대": "Zephyr", "여_20대": "Zephyr", "여_청년": "Zephyr", "여_30대": "Aoede", "여_40대": "Aoede", "여_중년": "Aoede", "여_50대": "Gacrux", "여_60대": "Gacrux", "여_70대": "Gacrux", "여_노년": "Gacrux" };
 
-        const ALL_VOICES = [
-            { name: "Zephyr", desc: "Bright (밝은)" },
-            { name: "Charon", desc: "Informative (깊은)" },
-            { name: "Kore", desc: "Firm (단단한)" },
-            { name: "Fenrir", desc: "Excitable (거친)" },
-            { name: "Leda", desc: "Youthful (여린)" },
-            { name: "Orus", desc: "Firm (무거운)" },
-            { name: "Aoede", desc: "Breezy (산뜻한)" },
-            { name: "Callirrhoe", desc: "Casual (캐주얼)" },
-            { name: "Autonoe", desc: "Bright (밝은)" },
-            { name: "Iapetus", desc: "Clear (맑은)" },
-            { name: "Umbriel", desc: "Casual (캐주얼)" },
-            { name: "Algieba", desc: "Smooth (부드러운)" },
-            { name: "Despina", desc: "Smooth (부드러운)" },
-            { name: "Erinome", desc: "Clear (맑은)" },
-            { name: "Algenib", desc: "Gravelly (거친)" },
-            { name: "Rasalgethi", desc: "Informative (정보형)" },
-            { name: "Laomedeia", desc: "Upbeat (경쾌한)" },
-            { name: "Achernar", desc: "Soft (부드러운)" },
-            { name: "Alnilam", desc: "Firm (단단한)" },
-            { name: "Schedar", desc: "Even (균형잡힌)" },
-            { name: "Gacrux", desc: "Mature (성숙한)" },
-            { name: "Pulcherrima", desc: "Forward (적극적)" },
-            { name: "Achird", desc: "Friendly (친근한)" },
-            { name: "Zubenelgenubi", desc: "Casual (캐주얼)" },
-            { name: "Vindemiatrix", desc: "Gentle (온화한)" },
-            { name: "Sadachbia", desc: "Lively (활발한)" },
-            { name: "Sadaltager", desc: "Knowledgeable (지적)" },
-            { name: "Sulafat", desc: "Warm (따뜻한)" },
-        ];
-
-        const VOICE_AUTO_MAP = {
-            "남_아이": "Leda", "남_10대": "Leda", "남_20대": "Orus", "남_30대": "Orus", "남_청년": "Orus",
-            "남_40대": "Charon", "남_50대": "Charon", "남_중년": "Charon",
-            "남_60대": "Fenrir", "남_70대": "Fenrir", "남_노년": "Fenrir",
-            "여_아이": "Leda", "여_10대": "Zephyr", "여_20대": "Zephyr", "여_청년": "Zephyr",
-            "여_30대": "Aoede", "여_40대": "Aoede", "여_중년": "Aoede",
-            "여_50대": "Gacrux", "여_60대": "Gacrux", "여_70대": "Gacrux", "여_노년": "Gacrux",
-        };
+        function uid() { return Math.random().toString(36).substr(2, 10); }
+        function uuid() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); }); }
 
         function switchTab(name) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.getElementById('tab-' + name).classList.add('active');
-            const tabNames = ['script', 'characters', 'generate', 'results'];
-            document.querySelectorAll('.tab-btn')[tabNames.indexOf(name)].classList.add('active');
+            const tabs = ['script', 'characters', 'generate', 'results', 'vrew'];
+            document.querySelectorAll('.tab-btn')[tabs.indexOf(name)].classList.add('active');
+            if (name === 'vrew') renderVrewPreview();
         }
-
-        function autoMatchVoice(gender, ageStr) {
-            let key = gender + '_' + ageStr;
-            if (VOICE_AUTO_MAP[key]) return VOICE_AUTO_MAP[key];
-            const nums = ageStr.match(/\d+/);
-            if (nums) {
-                const age = parseInt(nums[0]);
-                let cat;
-                if (age <= 12) cat = '아이';
-                else if (age <= 19) cat = '10대';
-                else if (age <= 29) cat = '20대';
-                else if (age <= 39) cat = '30대';
-                else if (age <= 49) cat = '40대';
-                else if (age <= 59) cat = '50대';
-                else if (age <= 69) cat = '60대';
-                else cat = '70대';
-                key = gender + '_' + cat;
-                if (VOICE_AUTO_MAP[key]) return VOICE_AUTO_MAP[key];
-            }
-            return gender === '남' ? 'Charon' : 'Aoede';
-        }
+        function autoMatchVoice(g, a) { let k = g + '_' + a; if (VOICE_AUTO_MAP[k]) return VOICE_AUTO_MAP[k]; const n = a.match(/\d+/); if (n) { const age = parseInt(n[0]); let c; if (age <= 12) c = '아이'; else if (age <= 19) c = '10대'; else if (age <= 29) c = '20대'; else if (age <= 39) c = '30대'; else if (age <= 49) c = '40대'; else if (age <= 59) c = '50대'; else if (age <= 69) c = '60대'; else c = '70대'; k = g + '_' + c; if (VOICE_AUTO_MAP[k]) return VOICE_AUTO_MAP[k]; } return g === '남' ? 'Charon' : 'Aoede'; }
 
         function parseScript() {
             const text = document.getElementById('scriptInput').value;
             if (!text.trim()) { alert('대본을 입력해 주세요.'); return; }
             const parts = text.split(/={3,}\s*본문\s*={3,}/);
-            const charSection = parts.length >= 2 ? parts[0] : '';
-            const bodySection = parts.length >= 2 ? parts[1] : text;
+            const cs = parts.length >= 2 ? parts[0] : '', bs = parts.length >= 2 ? parts[1] : text;
             parsedCharacters = {};
-            const charWithVoice = /\[캐릭터\/([^/]+)\/성별:([^/]+)\/나이:([^/]+)\/톤:([^/]+)\/음성:([^\]]+)\]/g;
-            let m;
-            while ((m = charWithVoice.exec(charSection)) !== null) {
-                parsedCharacters[m[1].trim()] = {
-                    gender: m[2].trim(), age: m[3].trim(), tone: m[4].trim(),
-                    voice: m[5].trim(), voiceSource: '직접지정'
-                };
-            }
-            const charNoVoice = /\[캐릭터\/([^/]+)\/성별:([^/]+)\/나이:([^/]+)\/톤:([^\]]+)\]/g;
-            while ((m = charNoVoice.exec(charSection)) !== null) {
-                const name = m[1].trim();
-                if (parsedCharacters[name]) continue;
-                const gender = m[2].trim();
-                const age = m[3].trim();
-                parsedCharacters[name] = {
-                    gender, age, tone: m[4].trim(),
-                    voice: autoMatchVoice(gender, age), voiceSource: '자동매칭'
-                };
-            }
-            if (!parsedCharacters['나레이션']) {
-                parsedCharacters['나레이션'] = {
-                    gender: '남', age: '40대', tone: '차분하고 깊은 목소리',
-                    voice: autoMatchVoice('남', '40대'), voiceSource: '기본값'
-                };
-            }
+            let m; const r1 = /\[캐릭터\/([^/]+)\/성별:([^/]+)\/나이:([^/]+)\/톤:([^/]+)\/음성:([^\]]+)\]/g;
+            while ((m = r1.exec(cs)) !== null) parsedCharacters[m[1].trim()] = { gender: m[2].trim(), age: m[3].trim(), tone: m[4].trim(), voice: m[5].trim(), voiceSource: '직접지정' };
+            const r2 = /\[캐릭터\/([^/]+)\/성별:([^/]+)\/나이:([^/]+)\/톤:([^\]]+)\]/g;
+            while ((m = r2.exec(cs)) !== null) { const n = m[1].trim(); if (parsedCharacters[n]) continue; const g = m[2].trim(), a = m[3].trim(); parsedCharacters[n] = { gender: g, age: a, tone: m[4].trim(), voice: autoMatchVoice(g, a), voiceSource: '자동매칭' }; }
+            if (!parsedCharacters['나레이션']) parsedCharacters['나레이션'] = { gender: '남', age: '40대', tone: '차분하고 깊은 목소리', voice: autoMatchVoice('남', '40대'), voiceSource: '기본값' };
             parsedLines = [];
-            const sceneRe = /\[장면전환\/이미지:\s*(.+)\]/;
-            const lineRe = /\[([^/\]]+)\/([^\]]+)\]\s*(.+)/;
-            bodySection.trim().split('\n').forEach(raw => {
-                raw = raw.trim();
-                if (!raw || raw.startsWith('#') || raw.startsWith('=')) return;
-                let sm = sceneRe.exec(raw);
+            bs.trim().split('\n').forEach(raw => {
+                raw = raw.trim(); if (!raw || raw.startsWith('#') || raw.startsWith('=')) return;
+                let sm = /\[장면전환\/이미지:\s*(.+)\]/.exec(raw);
                 if (sm) { parsedLines.push({ type: 'scene_change', description: sm[1].trim() }); return; }
-                let lm = lineRe.exec(raw);
+                let lm = /\[([^/\]]+)\/([^\]]+)\]\s*(.+)/.exec(raw);
                 if (lm) {
-                    const speaker = lm[1].trim();
-                    const emotion = lm[2].trim();
-                    let txt = lm[3].trim().replace(/^[""\u201c]+|[""\u201d]+$/g, '');
-                    parsedLines.push({
-                        type: speaker === '나레이션' ? 'narration' : 'dialogue',
-                        speaker, emotion, text: txt
-                    });
+                    const sp = lm[1].trim(), em = lm[2].trim(), tx = lm[3].trim().replace(/^[""\u201c]+|[""\u201d]+$/g, '');
+                    parsedLines.push({ type: sp === '나레이션' ? 'narration' : 'dialogue', speaker: sp, emotion: em, text: tx });
                 }
             });
-            document.getElementById('parseStatus').textContent =
-                `✅ ${Object.keys(parsedCharacters).length}명, ${parsedLines.length}줄 파싱 완료`;
-            renderCharTable();
-            switchTab('characters');
+            document.getElementById('parseStatus').textContent = `✅ ${Object.keys(parsedCharacters).length}명, ${parsedLines.length}줄`;
+            renderCharTable(); switchTab('characters');
         }
-
         function renderCharTable() {
-            let html = '<table class="char-table"><tr><th>캐릭터</th><th>성별</th><th>나이</th><th>톤</th><th>음성</th><th>매칭</th></tr>';
-            for (const [name, info] of Object.entries(parsedCharacters)) {
-                html += `<tr>
-            <td><strong>${name}</strong></td>
-            <td>${info.gender}</td>
-            <td>${info.age}</td>
-            <td style="font-size:0.85em;color:#aaa;">${info.tone}</td>
-            <td><select id="voice_${name}" onchange="updateVoice('${name}', this.value)">`;
-                ALL_VOICES.forEach(v => {
-                    const sel = v.name === info.voice ? 'selected' : '';
-                    html += `<option value="${v.name}" ${sel}>${v.name} - ${v.desc}</option>`;
-                });
-                html += `</select></td>
-            <td><span class="char-badge ${info.voiceSource === '직접지정' ? 'badge-manual' : 'badge-auto'}">${info.voiceSource}</span></td>
-        </tr>`;
+            let h = '<table class="char-table"><tr><th>캐릭터</th><th>성별</th><th>나이</th><th>톤</th><th>음성</th><th>매칭</th></tr>';
+            for (const [n, i] of Object.entries(parsedCharacters)) {
+                h += `<tr><td><strong>${n}</strong></td><td>${i.gender}</td><td>${i.age}</td><td style="font-size:0.85em;color:#aaa;">${i.tone}</td><td><select onchange="updateVoice('${n}',this.value)">`;
+                ALL_VOICES.forEach(v => { h += `<option value="${v.name}"${v.name === i.voice ? ' selected' : ''}>${v.name} - ${v.desc}</option>`; });
+                h += `</select></td><td><span class="char-badge ${i.voiceSource === '직접지정' ? 'badge-manual' : 'badge-auto'}">${i.voiceSource}</span></td></tr>`;
             }
-            html += '</table>';
-            document.getElementById('charTableWrap').innerHTML = html;
+            document.getElementById('charTableWrap').innerHTML = h + '</table>';
         }
+        function updateVoice(n, v) { parsedCharacters[n].voice = v; parsedCharacters[n].voiceSource = '직접지정'; renderCharTable(); }
 
-        function updateVoice(name, voice) {
-            parsedCharacters[name].voice = voice;
-            parsedCharacters[name].voiceSource = '직접지정';
-            renderCharTable();
+        function mergeNarrations(lines, max) {
+            const mg = []; let buf = null;
+            lines.forEach(l => { if (l.type === 'narration') { if (buf && buf.emotion === l.emotion && buf._c < max) { buf.text += ' ' + l.text; buf._c++; } else { if (buf) mg.push(buf); buf = { ...l, _c: 1 }; } } else { if (buf) { mg.push(buf); buf = null; } mg.push(l); } });
+            if (buf) mg.push(buf); mg.forEach(m => delete m._c); return mg;
         }
-
-        function mergeNarrations(lines, maxMerge) {
-            const merged = [];
-            let buffer = null;
-            lines.forEach(line => {
-                if (line.type === 'narration') {
-                    if (buffer && buffer.emotion === line.emotion && buffer._count < maxMerge) {
-                        buffer.text += ' ' + line.text;
-                        buffer._count++;
-                    } else {
-                        if (buffer) merged.push(buffer);
-                        buffer = { ...line, _count: 1 };
-                    }
-                } else {
-                    if (buffer) { merged.push(buffer); buffer = null; }
-                    merged.push(line);
-                }
-            });
-            if (buffer) merged.push(buffer);
-            merged.forEach(m => delete m._count);
-            return merged;
-        }
-
         function buildPrompt(line) {
-            const char = parsedCharacters[line.speaker] || parsedCharacters['나레이션'];
-            if (line.type === 'narration') {
-                return `당신은 ${char.age} ${char.gender}성 내레이터입니다. 목소리 특성: ${char.tone}. 현재 톤: ${line.emotion}. 다음 내레이션을 읽어주세요:\n\n${line.text}`;
-            } else {
-                return `당신은 ${char.age} ${char.gender}성 캐릭터 '${line.speaker}'입니다. 목소리 특성: ${char.tone}. 현재 감정: ${line.emotion}. 다음 대사를 연기하듯 말해주세요:\n\n"${line.text}"`;
-            }
+            const ch = parsedCharacters[line.speaker] || parsedCharacters['나레이션'];
+            if (line.type === 'narration') return `당신은 ${ch.age} ${ch.gender}성 내레이터입니다. 목소리 특성: ${ch.tone}. 현재 톤: ${line.emotion}. 다음 내레이션을 읽어주세요:\n\n${line.text}`;
+            return `당신은 ${ch.age} ${ch.gender}성 캐릭터 '${line.speaker}'입니다. 목소리 특성: ${ch.tone}. 현재 감정: ${line.emotion}. 다음 대사를 연기하듯 말해주세요:\n\n"${line.text}"`;
         }
-
-        function getVoice(line) {
-            const char = parsedCharacters[line.speaker] || parsedCharacters['나레이션'];
-            return char.voice;
-        }
+        function getVoice(line) { return (parsedCharacters[line.speaker] || parsedCharacters['나레이션']).voice; }
 
         async function callTTS(apiKey, prompt, voiceName) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-            const body = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    responseModalities: ["AUDIO"],
-                    speechConfig: {
-                        voiceConfig: {
-                            prebuiltVoiceConfig: { voiceName: voiceName }
-                        }
-                    }
-                }
-            };
-            const resp = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } } })
             });
-            if (!resp.ok) {
-                const err = await resp.text();
-                throw new Error(`API Error ${resp.status}: ${err.substring(0, 200)}`);
-            }
-            const data = await resp.json();
-            const b64 = data.candidates[0].content.parts[0].inlineData.data;
-            const pcm = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-            return pcmToWavBlob(pcm, 24000, 1, 16);
+            if (!resp.ok) throw new Error(`API ${resp.status}: ${(await resp.text()).substring(0, 200)}`);
+            const data = await resp.json(); const b64 = data.candidates[0].content.parts[0].inlineData.data;
+            const pcm = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); return pcmToWavBlob(pcm, 24000, 1, 16);
         }
-
-        function pcmToWavBlob(pcmData, sampleRate, channels, bitDepth) {
-            const dataLen = pcmData.length;
-            const buffer = new ArrayBuffer(44 + dataLen);
-            const view = new DataView(buffer);
-            function writeStr(offset, str) { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); }
-            writeStr(0, 'RIFF');
-            view.setUint32(4, 36 + dataLen, true);
-            writeStr(8, 'WAVE');
-            writeStr(12, 'fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true);
-            view.setUint16(22, channels, true);
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, sampleRate * channels * (bitDepth / 8), true);
-            view.setUint16(32, channels * (bitDepth / 8), true);
-            view.setUint16(34, bitDepth, true);
-            writeStr(36, 'data');
-            view.setUint32(40, dataLen, true);
-            new Uint8Array(buffer, 44).set(pcmData);
-            return new Blob([buffer], { type: 'audio/wav' });
+        function pcmToWavBlob(p, sr, ch, bd) {
+            const dl = p.length, buf = new ArrayBuffer(44 + dl), v = new DataView(buf);
+            function w(o, s) { for (let i = 0; i < s.length; i++)v.setUint8(o + i, s.charCodeAt(i)); }
+            w(0, 'RIFF'); v.setUint32(4, 36 + dl, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, ch, true); v.setUint32(24, sr, true); v.setUint32(28, sr * ch * (bd / 8), true); v.setUint16(32, ch * (bd / 8), true); v.setUint16(34, bd, true); w(36, 'data'); v.setUint32(40, dl, true);
+            new Uint8Array(buf, 44).set(p); return new Blob([buf], { type: 'audio/wav' });
         }
-
-        function wavBlobToMp3Blob(wavBlob) {
-            return new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = function () {
-                    const wavBuf = new Int16Array(this.result, 44);
-                    const mp3enc = new lamejs.Mp3Encoder(1, 24000, 192);
-                    const blockSize = 1152;
-                    const mp3Data = [];
-                    for (let i = 0; i < wavBuf.length; i += blockSize) {
-                        const chunk = wavBuf.subarray(i, i + blockSize);
-                        const mp3buf = mp3enc.encodeBuffer(chunk);
-                        if (mp3buf.length > 0) mp3Data.push(mp3buf);
-                    }
-                    const end = mp3enc.flush();
-                    if (end.length > 0) mp3Data.push(end);
-                    const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-                    resolve(blob);
-                };
-                reader.readAsArrayBuffer(wavBlob);
+        function wavBlobToMp3Blob(wb) {
+            return new Promise(res => {
+                const r = new FileReader(); r.onload = function () {
+                    const w = new Int16Array(this.result, 44), enc = new lamejs.Mp3Encoder(1, 24000, 192), bs = 1152, d = [];
+                    for (let i = 0; i < w.length; i += bs) { const b = enc.encodeBuffer(w.subarray(i, i + bs)); if (b.length > 0) d.push(b); }
+                    const e = enc.flush(); if (e.length > 0) d.push(e); res(new Blob(d, { type: 'audio/mp3' }));
+                }; r.readAsArrayBuffer(wb);
             });
         }
-
-        function getAudioDuration(blob) {
-            return new Promise(resolve => {
-                const url = URL.createObjectURL(blob);
-                const audio = new Audio();
-                audio.onloadedmetadata = () => { resolve(Math.round(audio.duration * 1000) / 1000); URL.revokeObjectURL(url); };
-                audio.onerror = () => { resolve(0); URL.revokeObjectURL(url); };
-                audio.src = url;
-            });
-        }
-
-        function addLog(msg, cls = '') {
-            const log = document.getElementById('logArea');
-            log.innerHTML += `<div class="${cls}">${msg}</div>`;
-            log.scrollTop = log.scrollHeight;
-        }
+        function getAudioDuration(b) { return new Promise(r => { const u = URL.createObjectURL(b), a = new Audio(); a.onloadedmetadata = () => { r(Math.round(a.duration * 1000) / 1000); URL.revokeObjectURL(u); }; a.onerror = () => { r(0); URL.revokeObjectURL(u); }; a.src = u; }); }
+        function addLog(m, c = '') { const l = document.getElementById('logArea'); l.innerHTML += `<div class="${c}">${m}</div>`; l.scrollTop = l.scrollHeight; }
 
         async function startGeneration() {
             const apiKey = document.getElementById('apiKey').value.trim();
             if (!apiKey) { alert('API 키를 입력해 주세요.'); return; }
             if (parsedLines.length === 0) { alert('먼저 대본을 분석해 주세요.'); return; }
-            const maxMerge = parseInt(document.getElementById('mergeCount').value);
-            const delay = parseFloat(document.getElementById('apiDelay').value) * 1000;
-            mergedLines = mergeNarrations(parsedLines, maxMerge);
-            const ttsLines = mergedLines.filter(l => l.type === 'narration' || l.type === 'dialogue');
-            document.getElementById('statTotal').textContent = ttsLines.length;
-            document.getElementById('statTime').textContent = (ttsLines.length * (delay / 1000 + 2) / 60).toFixed(1);
-            document.getElementById('statDone').textContent = '0';
-            document.getElementById('statFail').textContent = '0';
-            document.getElementById('progressFill').style.width = '0%';
-            document.getElementById('progressFill').textContent = '0%';
+            const maxM = parseInt(document.getElementById('mergeCount').value), delay = parseFloat(document.getElementById('apiDelay').value) * 1000;
+            mergedLines = mergeNarrations(parsedLines, maxM);
+            const tl = mergedLines.filter(l => l.type === 'narration' || l.type === 'dialogue');
+            document.getElementById('statTotal').textContent = tl.length;
+            document.getElementById('statTime').textContent = (tl.length * (delay / 1000 + 2) / 60).toFixed(1);
+            document.getElementById('statDone').textContent = '0'; document.getElementById('statFail').textContent = '0';
+            document.getElementById('progressFill').style.width = '0%'; document.getElementById('progressFill').textContent = '0%';
             document.getElementById('logArea').innerHTML = '';
-            document.getElementById('btnGenerate').disabled = true;
-            document.getElementById('btnStop').disabled = false;
-            generatedClips = [];
-            audioBlobs = {};
-            stopRequested = false;
-            let done = 0, fail = 0, ttsIdx = 0;
-            addLog(`[시작] TTS 생성 ${ttsLines.length}건, 나레이션 묶기: ${maxMerge}문장`, 'log-info');
+            document.getElementById('btnGenerate').disabled = true; document.getElementById('btnStop').disabled = false;
+            generatedClips = []; audioBlobs = {}; stopRequested = false; let done = 0, fail = 0, ti = 0;
+            addLog(`[시작] TTS ${tl.length}건, 묶기: ${maxM}문장`, 'log-info');
             for (const item of mergedLines) {
                 if (stopRequested) { addLog('[중지됨]', 'log-fail'); break; }
-                if (item.type === 'scene_change') {
-                    generatedClips.push({ type: 'scene_change', description: item.description, audioFile: null, duration: 0 });
-                    continue;
-                }
+                if (item.type === 'scene_change') { generatedClips.push({ type: 'scene_change', description: item.description, audioFile: null, duration: 0 }); continue; }
                 if (item.type !== 'narration' && item.type !== 'dialogue') continue;
-                ttsIdx++;
-                const fileNum = String(ttsIdx).padStart(3, '0');
-                const prompt = buildPrompt(item);
-                const voice = getVoice(item);
-                const label = item.type === 'narration' ? '나레이션' : item.speaker;
-                const preview = item.text.length > 35 ? item.text.substring(0, 35) + '...' : item.text;
-                addLog(`[${fileNum}/${ttsLines.length}] ${label} (${item.emotion}) → ${voice}`);
-                addLog(`  "${preview}"`);
+                ti++; const fn = String(ti).padStart(3, '0'), pr = buildPrompt(item), vc = getVoice(item);
+                const lb = item.type === 'narration' ? '나레이션' : item.speaker, pv = item.text.length > 35 ? item.text.substring(0, 35) + '...' : item.text;
+                addLog(`[${fn}/${tl.length}] ${lb} (${item.emotion}) → ${vc}`); addLog(`  "${pv}"`);
                 try {
-                    const wavBlob = await callTTS(apiKey, prompt, voice);
-                    const duration = await getAudioDuration(wavBlob);
-                    const mp3Blob = await wavBlobToMp3Blob(wavBlob);
-                    audioBlobs[fileNum] = mp3Blob;
-                    generatedClips.push({
-                        ttsIndex: ttsIdx, type: item.type, speaker: item.speaker,
-                        emotion: item.emotion, text: item.text, voice: voice,
-                        audioFile: `${fileNum}.mp3`, duration: duration
-                    });
-                    done++;
-                    addLog(`  ✅ ${fileNum}.mp3 (${duration}초)`, 'log-ok');
-                } catch (e) {
-                    fail++;
-                    generatedClips.push({
-                        ttsIndex: ttsIdx, type: item.type, speaker: item.speaker,
-                        text: item.text, audioFile: null, duration: 0, error: e.message
-                    });
-                    addLog(`  ❌ 실패: ${e.message}`, 'log-fail');
-                }
-                document.getElementById('statDone').textContent = done;
-                document.getElementById('statFail').textContent = fail;
-                const pct = Math.round((done + fail) / ttsLines.length * 100);
-                document.getElementById('progressFill').style.width = pct + '%';
-                document.getElementById('progressFill').textContent = pct + '%';
-                if (ttsIdx < ttsLines.length && !stopRequested) {
-                    await new Promise(r => setTimeout(r, delay));
-                }
+                    const wb = await callTTS(apiKey, pr, vc), dur = await getAudioDuration(wb), mb = await wavBlobToMp3Blob(wb);
+                    audioBlobs[fn] = mb;
+                    generatedClips.push({ ttsIndex: ti, type: item.type, speaker: item.speaker, emotion: item.emotion, text: item.text, voice: vc, audioFile: `${fn}.mp3`, duration: dur });
+                    done++; addLog(`  ✅ ${fn}.mp3 (${dur}초)`, 'log-ok');
+                } catch (e) { fail++; generatedClips.push({ ttsIndex: ti, type: item.type, speaker: item.speaker, text: item.text, audioFile: null, duration: 0, error: e.message }); addLog(`  ❌ ${e.message}`, 'log-fail'); }
+                document.getElementById('statDone').textContent = done; document.getElementById('statFail').textContent = fail;
+                const pct = Math.round((done + fail) / tl.length * 100); document.getElementById('progressFill').style.width = pct + '%'; document.getElementById('progressFill').textContent = pct + '%';
+                if (ti < tl.length && !stopRequested) await new Promise(r => setTimeout(r, delay));
             }
-            const totalDur = generatedClips.reduce((s, c) => s + (c.duration || 0), 0);
-            addLog(`\n[완료] 성공: ${done}, 실패: ${fail}, 총 재생시간: ${totalDur.toFixed(1)}초 (${(totalDur / 60).toFixed(1)}분)`, 'log-info');
-            document.getElementById('btnGenerate').disabled = false;
-            document.getElementById('btnStop').disabled = true;
+            const td = generatedClips.reduce((s, c) => s + (c.duration || 0), 0);
+            addLog(`\n[완료] 성공:${done} 실패:${fail} 재생:${td.toFixed(1)}초 (${(td / 60).toFixed(1)}분)`, 'log-info');
+            document.getElementById('btnGenerate').disabled = false; document.getElementById('btnStop').disabled = true;
             document.getElementById('apiStatus').textContent = '🟢 사용됨';
-            renderResults();
-            switchTab('results');
+            renderResults(); switchTab('results');
         }
-
-        function stopGeneration() {
-            stopRequested = true;
-            document.getElementById('btnStop').disabled = true;
-        }
+        function stopGeneration() { stopRequested = true; document.getElementById('btnStop').disabled = true; }
 
         function renderResults() {
-            let html = '';
-            generatedClips.forEach((clip, i) => {
-                if (clip.type === 'scene_change') {
-                    html += `<div class="result-item" style="border-left:3px solid #e94560;">
-                <div class="num">🎬</div>
-                <div class="info">장면전환: ${clip.description}</div>
-            </div>`;
-                    return;
-                }
-                if (!clip.audioFile) return;
-                const num = clip.audioFile.replace('.mp3', '');
-                const blob = audioBlobs[num];
-                const url = blob ? URL.createObjectURL(blob) : '';
-                const label = clip.type === 'narration' ? '나레이션' : clip.speaker;
-                html += `<div class="result-item">
-            <div class="num">${num}</div>
-            <div class="info"><span class="speaker-tag">${label}</span> (${clip.emotion})<br><small>${clip.text.substring(0, 60)}${clip.text.length > 60 ? '...' : ''}</small></div>
-            <div class="duration">${clip.duration}s</div>
-            ${url ? `<audio controls src="${url}" preload="none"></audio>` : ''}
-        </div>`;
+            let h = ''; generatedClips.forEach(clip => {
+                if (clip.type === 'scene_change') { h += `<div class="result-item" style="border-left:3px solid #e94560;"><div class="num">🎬</div><div class="info">장면전환: ${clip.description}</div></div>`; return; }
+                if (!clip.audioFile) return; const n = clip.audioFile.replace('.mp3', ''), b = audioBlobs[n], u = b ? URL.createObjectURL(b) : '', lb = clip.type === 'narration' ? '나레이션' : clip.speaker;
+                h += `<div class="result-item"><div class="num">${n}</div><div class="info"><span class="speaker-tag">${lb}</span> (${clip.emotion})<br><small>${clip.text.substring(0, 60)}${clip.text.length > 60 ? '...' : ''}</small></div><div class="duration">${clip.duration}s</div>${u ? `<audio controls src="${u}" preload="none"></audio>` : ''}</div>`;
             });
-            document.getElementById('resultsList').innerHTML = html || '<p style="color:#888;">생성된 결과가 없습니다.</p>';
+            document.getElementById('resultsList').innerHTML = h || '<p style="color:#888;">결과 없음</p>';
         }
 
-        async function downloadAllZip() {
-            if (Object.keys(audioBlobs).length === 0) { alert('생성된 파일이 없습니다.'); return; }
-            const zip = new JSZip();
-            const media = zip.folder('media');
-            for (const [name, blob] of Object.entries(audioBlobs)) {
-                media.file(name + '.mp3', blob);
+        // ============================================================
+        // VREW Preview
+        // ============================================================
+        function renderVrewPreview() {
+            if (generatedClips.length === 0) { document.getElementById('vrewPreview').innerHTML = '<p style="color:#888;">TTS 생성 후 미리보기가 표시됩니다.</p>'; return; }
+            let h = ''; generatedClips.forEach((c, i) => {
+                if (c.type === 'scene_change') { h += `<div class="vrew-clip"><div class="clip-num">🎬</div><span class="clip-type type-scene">전환</span><div class="clip-text">${c.description}</div><div class="clip-dur">-</div></div>`; return; }
+                if (!c.audioFile) return; const n = c.audioFile.replace('.mp3', ''), tp = c.type === 'narration' ? '나레이션' : '대사';
+                h += `<div class="vrew-clip"><div class="clip-num">${n}</div><span class="clip-type ${c.type === 'narration' ? 'type-narration' : 'type-dialogue'}">${tp}</span><div class="clip-text">${c.speaker}: ${c.text.substring(0, 50)}${c.text.length > 50 ? '...' : ''}</div><div class="clip-dur">${c.duration}s</div></div>`;
+            });
+            document.getElementById('vrewPreview').innerHTML = h;
+        }
+
+        // ============================================================
+        // VREW Project Generator (Phase 2)
+        // ============================================================
+        async function generateVrew() {
+            if (generatedClips.length === 0 || Object.keys(audioBlobs).length === 0) { alert('먼저 TTS를 생성해 주세요.'); return; }
+            const vLog = document.getElementById('vrewLog'); vLog.innerHTML = '';
+            function vl(m, c = '') { vLog.innerHTML += `<div class="${c}">${m}</div>`; vLog.scrollTop = vLog.scrollHeight; }
+
+            vl('[1/4] VREW 프로젝트 구조 생성 중...', 'log-info');
+
+            const res = document.getElementById('vrewResolution').value.split('x');
+            const vWidth = parseInt(res[0]), vHeight = parseInt(res[1]);
+            const ratio = vWidth / vHeight;
+            const vol = parseFloat(document.getElementById('vrewVolume').value);
+            const font = document.getElementById('vrewFont').value;
+            const fontSize = document.getElementById('vrewFontSize').value;
+            const fontColor = document.getElementById('vrewFontColor').value;
+
+            // Base template
+            const dummyMediaId = "10000000-0000-0000-0000";
+            const captionMediaId = "uc-0010-simple-textbox";
+            const projectId = uuid();
+
+            const files = [
+                { version: 1, mediaId: dummyMediaId, sourceOrigin: "VREW_RESOURCE", fileSize: 176444, name: dummyMediaId + ".mp4", type: "AVMedia", videoAudioMetaInfo: { duration: 1, audioInfo: { sampleRate: 44100, codec: "wav", channelCount: 1 } }, sourceFileType: "VIDEO_AUDIO", fileLocation: "IN_MEMORY" },
+                { version: 1, mediaId: captionMediaId, sourceOrigin: "USER", fileSize: 965, name: captionMediaId + ".html", type: "Html", fileLocation: "IN_MEMORY" }
+            ];
+
+            const clips = [];
+            const tracks = {};
+            const assets = {};
+            const ttsClipInfosMap = {};
+
+            // Process each clip
+            const ttsClips = generatedClips.filter(c => c.audioFile && c.type !== 'scene_change');
+
+            for (const clip of ttsClips) {
+                const fn = clip.audioFile.replace('.mp3', '');
+                const mediaId = 'tts-' + fn;
+                const blob = audioBlobs[fn];
+                const fileSize = blob ? blob.size : 0;
+
+                // 1. Register in files[]
+                files.push({
+                    version: 1,
+                    mediaId: mediaId,
+                    sourceOrigin: "VREW_RESOURCE",
+                    fileSize: fileSize,
+                    name: clip.text.substring(0, 20) + '.mp3',
+                    type: "AVMedia",
+                    videoAudioMetaInfo: { duration: clip.duration, audioInfo: { sampleRate: 24000, codec: "mp3" } },
+                    sourceFileType: "TTS",
+                    fileLocation: "IN_MEMORY"
+                });
+
+                // 2. Create track for TTS audio
+                const trackId = 'trk-' + uid();
+                tracks[trackId] = {
+                    trackId: trackId,
+                    mediaId: mediaId,
+                    volume: vol,
+                    sourceIn: 0,
+                    sourceOut: clip.duration,
+                    loop: false,
+                    playbackRate: 1,
+                    type: "ttsClip"
+                };
+
+                // 3. Create asset linking track
+                const assetId = uuid();
+                assets[assetId] = { trackIds: [trackId], role: "main" };
+
+                // 4. Create word entry
+                const wordId = 'w-' + uid();
+                const endWordId = 'we-' + uid();
+
+                // 5. Create clip
+                const clipId = 'c-' + uid();
+                const sceneId = 's-' + uid();
+                clips.push({
+                    sceneId: sceneId,
+                    words: [
+                        { id: wordId, text: "", playbackRate: 1, duration: clip.duration, aligned: false, type: 1, originalDuration: clip.duration, originalStartTime: 0, truncatedWords: [], assetIds: [assetId] },
+                        { id: endWordId, text: "", playbackRate: 1, duration: 0, aligned: false, type: 2, originalDuration: 0, originalStartTime: clip.duration, truncatedWords: [], assetIds: [] }
+                    ],
+                    captionMode: "MANUAL",
+                    captions: [
+                        { text: [{ insert: clip.text + "\n" }] },
+                        { text: [{ insert: "\n" }] }
+                    ],
+                    assetIds: [],
+                    dirty: { blankDeleted: false, caption: false, video: false },
+                    translationModified: { result: false, source: false },
+                    id: clipId
+                });
+
+                // 6. TTS clip info
+                ttsClipInfosMap[mediaId] = {
+                    duration: clip.duration,
+                    pitch: 0, speed: 0, volume: 0,
+                    text: { processed: clip.text, raw: clip.text, textAspectLang: "ko-KR" },
+                    speaker: { age: "middle", gender: "female", lang: "ko-KR", name: "gemini-tts", speakerId: "gemini-tts", provider: "gemini", tags: [] }
+                };
+
+                vl(`  ✅ ${fn} → 클립 생성 (${clip.duration}초)`, 'log-ok');
             }
-            const mapping = {
-                project_info: {
-                    created: new Date().toISOString(),
-                    total_tts_files: Object.keys(audioBlobs).length,
-                    characters: parsedCharacters
+
+            // Add blank clip at end
+            const blankClipId = 'c-' + uid();
+            const blankWords = [];
+            for (let i = 0; i < 5; i++)blankWords.push({ id: 'bw-' + uid(), text: "", playbackRate: 1, duration: 1, aligned: false, type: 7, originalDuration: 1, originalStartTime: 0, truncatedWords: [], assetIds: [] });
+            blankWords.push({ id: 'bwe-' + uid(), text: "", playbackRate: 1, duration: 0, aligned: false, type: 2, originalDuration: 0, originalStartTime: 1, truncatedWords: [], assetIds: [] });
+            clips.push({ sceneId: 's-' + uid(), words: blankWords, captionMode: "MANUAL", captions: [{ text: [{ insert: "\n" }] }, { text: [{ insert: "\n" }] }], assetIds: [], dirty: { blankDeleted: false, caption: false, video: false }, translationModified: { result: false, source: false }, id: blankClipId });
+
+            vl('[2/4] project.json 조립 중...', 'log-info');
+
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+            const isoStr = now.toISOString();
+
+            const project = {
+                version: 16,
+                files: files,
+                transcript: { clips: clips, sceneNames: {}, translateInfo: null },
+                props: {
+                    tracks: tracks,
+                    assets: assets,
+                    overdubInfos: {},
+                    analyzeDate: dateStr,
+                    captionDisplayMode: { "0": true, "1": false },
+                    mediaEffectMap: { [dummyMediaId]: { filter: { effectType: "filter", filterMediaId: "default-filter", filterAlphas: { "default-filter": 0.5 } } } },
+                    markerNames: { "0": "", "1": "", "2": "", "3": "", "4": "", "5": "" },
+                    flipSetting: {},
+                    videoRatio: ratio,
+                    globalVideoTransform: { zoom: 1, xPos: 0, yPos: 0, rotation: 0 },
+                    videoSize: { width: vWidth, height: vHeight },
+                    backgroundMap: {},
+                    globalCaptionStyle: {
+                        captionStyleSetting: { mediaId: captionMediaId, yAlign: "middle", yOffset: 0.25, xOffset: 0, rotation: 0, width: 0.96, customAttributes: [{ attributeName: "--textbox-color", type: "color-hex", value: "#00000099" }, { attributeName: "--textbox-align", type: "textbox-align", value: "center" }], scaleFactor: ratio },
+                        quillStyle: { font: font, size: fontSize, color: fontColor, "outline-on": "true", "outline-color": "#000000", "outline-width": "6" }
+                    },
+                    lastTTSSettings: { pitch: 1, speed: -1, volume: 0, speaker: { age: "middle", gender: "female", lang: "ko-KR", name: "gemini-tts", speakerId: "gemini-tts", provider: "gemini", tags: [] } },
+                    initProjectVideoSize: { width: vWidth, height: vHeight },
+                    pronunciationDisplay: true,
+                    projectAudioLanguage: "ko",
+                    audioLanguagesMap: {},
+                    originalClips: [],
+                    ttsClipInfosMap: ttsClipInfosMap
                 },
-                clips: generatedClips
+                comment: `3.7.3\t${isoStr}`,
+                projectId: projectId,
+                statistics: { wordCursorCount: { "0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0 }, wordSelectionCount: { "0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0 }, wordCorrectionCount: { "0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0 }, projectStartMode: "unknown", saveInfo: { created: { version: "3.7.3", date: isoStr, stage: "release" }, updated: { version: "3.7.3", date: isoStr, stage: "release" }, loadCount: 0, saveCount: 1 }, savedStyleApplyCount: 0, cumulativeTemplateApplyCount: 0, ratioChangedByTemplate: false, videoRemixInfos: {}, isAIWritingUsed: false, clientLinebreakExecuteCount: 0, agentStats: { isEdited: false, requestCount: 0, responseCount: 0, toolCallCount: 0, toolErrorCount: 0 }, cumulativeNewTemplateApplyCount: 0 }
             };
-            zip.file('mapping.json', JSON.stringify(mapping, null, 2));
+
+            vl('[3/4] ZIP 패키징 중...', 'log-info');
+
+            const zip = new JSZip();
+            zip.file('project.json', JSON.stringify(project));
+            const media = zip.folder('media');
+
+            // Add dummy mp4
+            media.file(dummyMediaId + '.mp4', new Blob([new ArrayBuffer(100)], { type: 'video/mp4' }));
+
+            // Add TTS mp3 files
+            for (const clip of ttsClips) {
+                const fn = clip.audioFile.replace('.mp3', '');
+                const mediaId = 'tts-' + fn;
+                const blob = audioBlobs[fn];
+                if (blob) media.file(mediaId + '.mp3', blob);
+            }
+
+            vl('[4/4] .vrew 파일 생성 중...', 'log-info');
+
             const content = await zip.generateAsync({ type: 'blob' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(content);
-            a.download = 'gd_tts_output.zip';
+            a.download = 'gd_project.vrew';
             a.click();
+
+            const totalDur = ttsClips.reduce((s, c) => s + (c.duration || 0), 0);
+            vl(`\n✅ 완료! gd_project.vrew 다운로드됨`, 'log-ok');
+            vl(`  클립: ${ttsClips.length}개, 총 재생시간: ${totalDur.toFixed(1)}초 (${(totalDur / 60).toFixed(1)}분)`, 'log-info');
+            vl(`  VREW에서 열어서 확인해 보세요!`, 'log-info');
         }
 
+        // ============================================================
+        // Downloads
+        // ============================================================
+        async function downloadAllZip() {
+            if (Object.keys(audioBlobs).length === 0) { alert('생성된 파일이 없습니다.'); return; }
+            const zip = new JSZip(), media = zip.folder('media');
+            for (const [n, b] of Object.entries(audioBlobs)) media.file(n + '.mp3', b);
+            zip.file('mapping.json', JSON.stringify({ project_info: { created: new Date().toISOString(), total_tts_files: Object.keys(audioBlobs).length, characters: parsedCharacters }, clips: generatedClips }, null, 2));
+            const c = await zip.generateAsync({ type: 'blob' }); const a = document.createElement('a'); a.href = URL.createObjectURL(c); a.download = 'gd_tts_output.zip'; a.click();
+        }
         function downloadMapping() {
-            const mapping = {
-                project_info: { created: new Date().toISOString(), characters: parsedCharacters },
-                clips: generatedClips
-            };
-            const blob = new Blob([JSON.stringify(mapping, null, 2)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'mapping.json';
-            a.click();
+            const b = new Blob([JSON.stringify({ project_info: { created: new Date().toISOString(), characters: parsedCharacters }, clips: generatedClips }, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'mapping.json'; a.click();
         }
-
-        function loadFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => { document.getElementById('scriptInput').value = e.target.result; };
-            reader.readAsText(file);
-        }
-
+        function loadFile(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { document.getElementById('scriptInput').value = ev.target.result; }; r.readAsText(f); }
         function loadSample() {
             document.getElementById('scriptInput').value = `========== 등장인물 ==========
 [캐릭터/나레이션/성별:남/나이:40대/톤:차분하고 깊은 목소리로 이야기를 들려주는 내레이터]
@@ -873,10 +914,7 @@
 [나레이션/무거운 톤으로] 그로부터 석 달 뒤, 뜻밖의 소식이 석교촌에 당도했습니다.
 [서진/경악하며] "설마… 니가…?"`;
         }
-
-        document.getElementById('apiKey').addEventListener('input', function () {
-            document.getElementById('apiStatus').textContent = this.value.trim() ? '🟡 입력됨' : '⚪ 미입력';
-        });
+        document.getElementById('apiKey').addEventListener('input', function () { document.getElementById('apiStatus').textContent = this.value.trim() ? '🟡 입력됨' : '⚪ 미입력'; });
     </script>
 </body>
 
