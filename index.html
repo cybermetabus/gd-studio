@@ -1,647 +1,859 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GD TTS Studio</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #e0e0e0; min-height: 100vh; }
-.container { max-width: 960px; margin: 0 auto; padding: 20px; }
-h1 { text-align: center; color: #e94560; margin: 20px 0; font-size: 1.8em; }
-.subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.9em; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GD TTS Studio</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-/* Tabs */
-.tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-.tab-btn { flex: 1; padding: 12px; background: #16213e; border: none; color: #888; font-size: 1em; cursor: pointer; border-radius: 8px 8px 0 0; transition: all 0.3s; }
-.tab-btn.active { background: #0f3460; color: #e94560; font-weight: bold; }
-.tab-content { display: none; background: #0f3460; border-radius: 0 0 8px 8px; padding: 25px; }
-.tab-content.active { display: block; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
 
-/* Form elements */
-label { display: block; margin: 15px 0 5px; color: #aaa; font-size: 0.9em; }
-input[type="text"], input[type="password"], input[type="number"], select {
-    width: 100%; padding: 10px; background: #16213e; border: 1px solid #333; color: #e0e0e0; border-radius: 6px; font-size: 0.95em;
-}
-textarea { width: 100%; padding: 12px; background: #16213e; border: 1px solid #333; color: #e0e0e0; border-radius: 6px; font-family: monospace; font-size: 0.85em; line-height: 1.6; resize: vertical; }
-button { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s; }
-.btn-primary { background: #e94560; color: white; }
-.btn-primary:hover { background: #c73651; }
-.btn-primary:disabled { background: #555; cursor: not-allowed; }
-.btn-secondary { background: #16213e; color: #e94560; border: 1px solid #e94560; }
-.btn-small { padding: 6px 12px; font-size: 0.85em; }
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-/* API Key */
-.api-key-bar { display: flex; gap: 10px; align-items: center; background: #16213e; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; }
-.api-key-bar input { flex: 1; margin: 0; }
-.api-key-bar .status { font-size: 0.85em; white-space: nowrap; }
+        h1 {
+            text-align: center;
+            color: #e94560;
+            margin: 20px 0;
+            font-size: 1.8em;
+        }
 
-/* Character table */
-.char-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-.char-table th, .char-table td { padding: 10px; text-align: left; border-bottom: 1px solid #1a1a2e; }
-.char-table th { color: #e94560; font-size: 0.85em; }
-.char-table select { width: auto; min-width: 140px; }
-.char-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; }
-.badge-auto { background: #0a3d62; color: #82ccdd; }
-.badge-manual { background: #6a0572; color: #e0aaff; }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
 
-/* Progress */
-.progress-bar { width: 100%; height: 24px; background: #16213e; border-radius: 12px; overflow: hidden; margin: 15px 0; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #e94560, #c73651); transition: width 0.3s; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: bold; }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
 
-/* Log */
-.log-area { background: #0a0a1a; border-radius: 6px; padding: 12px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.82em; line-height: 1.8; }
-.log-ok { color: #27ae60; }
-.log-fail { color: #e94560; }
-.log-info { color: #82ccdd; }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #16213e;
+            border: none;
+            color: #888;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s;
+        }
 
-/* Results */
-.result-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: #16213e; border-radius: 6px; margin: 8px 0; }
-.result-item .num { color: #e94560; font-weight: bold; min-width: 40px; }
-.result-item .info { flex: 1; font-size: 0.85em; }
-.result-item .speaker-tag { color: #82ccdd; font-weight: bold; }
-.result-item audio { height: 32px; }
-.result-item .duration { color: #888; font-size: 0.8em; min-width: 50px; }
+        .tab-btn.active {
+            background: #0f3460;
+            color: #e94560;
+            font-weight: bold;
+        }
 
-/* Settings row */
-.settings-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
-.settings-row > div { flex: 1; min-width: 150px; }
+        .tab-content {
+            display: none;
+            background: #0f3460;
+            border-radius: 0 0 8px 8px;
+            padding: 25px;
+        }
 
-/* Stats */
-.stats { display: flex; gap: 15px; flex-wrap: wrap; margin: 15px 0; }
-.stat-box { flex: 1; min-width: 120px; background: #16213e; padding: 15px; border-radius: 8px; text-align: center; }
-.stat-box .num { font-size: 1.5em; color: #e94560; font-weight: bold; }
-.stat-box .label { font-size: 0.8em; color: #888; margin-top: 5px; }
-</style>
+        .tab-content.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #16213e;
+            border: 1px solid #333;
+            color: #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            background: #16213e;
+            border: 1px solid #333;
+            color: #e0e0e0;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #e94560;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #c73651;
+        }
+
+        .btn-primary:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #16213e;
+            color: #e94560;
+            border: 1px solid #e94560;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
+        .api-key-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: #16213e;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .api-key-bar input {
+            flex: 1;
+            margin: 0;
+        }
+
+        .api-key-bar .status {
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+        .char-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .char-table th,
+        .char-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #1a1a2e;
+        }
+
+        .char-table th {
+            color: #e94560;
+            font-size: 0.85em;
+        }
+
+        .char-table select {
+            width: auto;
+            min-width: 140px;
+        }
+
+        .char-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75em;
+        }
+
+        .badge-auto {
+            background: #0a3d62;
+            color: #82ccdd;
+        }
+
+        .badge-manual {
+            background: #6a0572;
+            color: #e0aaff;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: #16213e;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e94560, #c73651);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .log-area {
+            background: #0a0a1a;
+            border-radius: 6px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.82em;
+            line-height: 1.8;
+        }
+
+        .log-ok {
+            color: #27ae60;
+        }
+
+        .log-fail {
+            color: #e94560;
+        }
+
+        .log-info {
+            color: #82ccdd;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: #16213e;
+            border-radius: 6px;
+            margin: 8px 0;
+        }
+
+        .result-item .num {
+            color: #e94560;
+            font-weight: bold;
+            min-width: 40px;
+        }
+
+        .result-item .info {
+            flex: 1;
+            font-size: 0.85em;
+        }
+
+        .result-item .speaker-tag {
+            color: #82ccdd;
+            font-weight: bold;
+        }
+
+        .result-item audio {
+            height: 32px;
+        }
+
+        .result-item .duration {
+            color: #888;
+            font-size: 0.8em;
+            min-width: 50px;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .settings-row>div {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .stat-box {
+            flex: 1;
+            min-width: 120px;
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-box .num {
+            font-size: 1.5em;
+            color: #e94560;
+            font-weight: bold;
+        }
+
+        .stat-box .label {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 5px;
+        }
+    </style>
 </head>
+
 <body>
-<div class="container">
-    <h1>GD TTS Studio</h1>
-    <p class="subtitle">대본 → TTS 자동 생성 파이프라인 v2.0 | 나레이션 묶기 + 자동 음성 매칭</p>
-
-    <!-- API Key Bar -->
-    <div class="api-key-bar">
-        <span style="color:#e94560; font-weight:bold;">API Key:</span>
-        <input type="password" id="apiKey" placeholder="Gemini API 키 입력...">
-        <span class="status" id="apiStatus">⚪ 미입력</span>
-    </div>
-
-    <!-- Tabs -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('script')">1. 대본 입력</button>
-        <button class="tab-btn" onclick="switchTab('characters')">2. 캐릭터 확인</button>
-        <button class="tab-btn" onclick="switchTab('generate')">3. TTS 생성</button>
-        <button class="tab-btn" onclick="switchTab('results')">4. 결과</button>
-    </div>
-
-    <!-- Tab 1: Script Input -->
-    <div id="tab-script" class="tab-content active">
-        <label>대본 붙여넣기 (또는 파일 업로드)</label>
-        <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <input type="file" id="fileInput" accept=".txt" style="flex:1;" onchange="loadFile(event)">
-            <button class="btn-secondary btn-small" onclick="loadSample()">샘플 대본 불러오기</button>
+    <div class="container">
+        <h1>GD TTS Studio</h1>
+        <p class="subtitle">대본 → TTS 자동 생성 파이프라인 v2.1 | MP3 출력 + 나레이션 묶기 + 자동 음성 매칭</p>
+        <div class="api-key-bar">
+            <span style="color:#e94560; font-weight:bold;">API Key:</span>
+            <input type="password" id="apiKey" placeholder="Gemini API 키 입력...">
+            <span class="status" id="apiStatus">⚪ 미입력</span>
         </div>
-        <textarea id="scriptInput" rows="20" placeholder="========== 등장인물 ==========
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('script')">1. 대본 입력</button>
+            <button class="tab-btn" onclick="switchTab('characters')">2. 캐릭터 확인</button>
+            <button class="tab-btn" onclick="switchTab('generate')">3. TTS 생성</button>
+            <button class="tab-btn" onclick="switchTab('results')">4. 결과</button>
+        </div>
+        <div id="tab-script" class="tab-content active">
+            <label>대본 붙여넣기 (또는 파일 업로드)</label>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <input type="file" id="fileInput" accept=".txt" style="flex:1;" onchange="loadFile(event)">
+                <button class="btn-secondary btn-small" onclick="loadSample()">샘플 대본 불러오기</button>
+            </div>
+            <textarea id="scriptInput" rows="20" placeholder="========== 등장인물 ==========
 [캐릭터/나레이션/성별:남/나이:40대/톤:차분하고 깊은 목소리]
 [캐릭터/막순/성별:여/나이:70대/톤:거칠지만 따뜻한 할머니]
 ========== 본문 ==========
 [나레이션/담담하게] 깊은 가을이었습니다.
 [막순/걱정스럽게] &quot;소이야, 손이 시릴 텐디...&quot;"></textarea>
-        <div style="margin-top:15px; display:flex; gap:10px;">
-            <button class="btn-primary" onclick="parseScript()">대본 분석하기</button>
-            <span id="parseStatus" style="line-height:42px; color:#888;"></span>
+            <div style="margin-top:15px; display:flex; gap:10px;">
+                <button class="btn-primary" onclick="parseScript()">대본 분석하기</button>
+                <span id="parseStatus" style="line-height:42px; color:#888;"></span>
+            </div>
         </div>
-    </div>
-
-    <!-- Tab 2: Characters -->
-    <div id="tab-characters" class="tab-content">
-        <h3 style="color:#e94560; margin-bottom:15px;">등장인물 & 음성 매칭</h3>
-        <div id="charTableWrap"><p style="color:#888;">먼저 대본을 분석해 주세요.</p></div>
-        <div style="margin-top:20px;">
-            <h4 style="color:#aaa; margin-bottom:10px;">나레이션 묶기 설정</h4>
-            <div class="settings-row">
-                <div>
-                    <label>연속 나레이션 최대 묶기 수</label>
-                    <select id="mergeCount">
-                        <option value="3">3문장 (기본)</option>
-                        <option value="5" selected>5문장 (권장 - 비용절감)</option>
-                        <option value="7">7문장 (최대절감)</option>
-                        <option value="10">10문장</option>
-                    </select>
-                </div>
-                <div>
-                    <label>API 호출 간격 (초)</label>
-                    <input type="number" id="apiDelay" value="2" min="1" max="10">
+        <div id="tab-characters" class="tab-content">
+            <h3 style="color:#e94560; margin-bottom:15px;">등장인물 & 음성 매칭</h3>
+            <div id="charTableWrap">
+                <p style="color:#888;">먼저 대본을 분석해 주세요.</p>
+            </div>
+            <div style="margin-top:20px;">
+                <h4 style="color:#aaa; margin-bottom:10px;">나레이션 묶기 설정</h4>
+                <div class="settings-row">
+                    <div>
+                        <label>연속 나레이션 최대 묶기 수</label>
+                        <select id="mergeCount">
+                            <option value="3">3문장 (기본)</option>
+                            <option value="5" selected>5문장 (권장 - 비용절감)</option>
+                            <option value="7">7문장 (최대절감)</option>
+                            <option value="10">10문장</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>API 호출 간격 (초)</label>
+                        <input type="number" id="apiDelay" value="2" min="1" max="10">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Tab 3: Generate -->
-    <div id="tab-generate" class="tab-content">
-        <div class="stats" id="genStats">
-            <div class="stat-box"><div class="num" id="statTotal">-</div><div class="label">총 TTS 요청</div></div>
-            <div class="stat-box"><div class="num" id="statDone">0</div><div class="label">완료</div></div>
-            <div class="stat-box"><div class="num" id="statFail">0</div><div class="label">실패</div></div>
-            <div class="stat-box"><div class="num" id="statTime">-</div><div class="label">예상 시간(분)</div></div>
+        <div id="tab-generate" class="tab-content">
+            <div class="stats" id="genStats">
+                <div class="stat-box">
+                    <div class="num" id="statTotal">-</div>
+                    <div class="label">총 TTS 요청</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="statDone">0</div>
+                    <div class="label">완료</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="statFail">0</div>
+                    <div class="label">실패</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="statTime">-</div>
+                    <div class="label">예상 시간(분)</div>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width:0%;">0%</div>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="btn-primary" id="btnGenerate" onclick="startGeneration()">TTS 생성 시작</button>
+                <button class="btn-secondary" id="btnStop" onclick="stopGeneration()" disabled>중지</button>
+            </div>
+            <div class="log-area" id="logArea"></div>
         </div>
-        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%;">0%</div></div>
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <button class="btn-primary" id="btnGenerate" onclick="startGeneration()">TTS 생성 시작</button>
-            <button class="btn-secondary" id="btnStop" onclick="stopGeneration()" disabled>중지</button>
+        <div id="tab-results" class="tab-content">
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="btn-primary" onclick="downloadAllZip()">전체 ZIP 다운로드</button>
+                <button class="btn-secondary" onclick="downloadMapping()">mapping.json 다운로드</button>
+            </div>
+            <div id="resultsList">
+                <p style="color:#888;">TTS 생성 후 결과가 표시됩니다.</p>
+            </div>
         </div>
-        <div class="log-area" id="logArea"></div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+    <script>
+        let parsedCharacters = {};
+        let parsedLines = [];
+        let mergedLines = [];
+        let generatedClips = [];
+        let audioBlobs = {};
+        let stopRequested = false;
 
-    <!-- Tab 4: Results -->
-    <div id="tab-results" class="tab-content">
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <button class="btn-primary" onclick="downloadAllZip()">전체 ZIP 다운로드</button>
-            <button class="btn-secondary" onclick="downloadMapping()">mapping.json 다운로드</button>
-        </div>
-        <div id="resultsList"><p style="color:#888;">TTS 생성 후 결과가 표시됩니다.</p></div>
-    </div>
-</div>
+        const ALL_VOICES = [
+            { name: "Zephyr", desc: "Bright (밝은)" },
+            { name: "Charon", desc: "Informative (깊은)" },
+            { name: "Kore", desc: "Firm (단단한)" },
+            { name: "Fenrir", desc: "Excitable (거친)" },
+            { name: "Leda", desc: "Youthful (여린)" },
+            { name: "Orus", desc: "Firm (무거운)" },
+            { name: "Aoede", desc: "Breezy (산뜻한)" },
+            { name: "Callirrhoe", desc: "Casual (캐주얼)" },
+            { name: "Autonoe", desc: "Bright (밝은)" },
+            { name: "Iapetus", desc: "Clear (맑은)" },
+            { name: "Umbriel", desc: "Casual (캐주얼)" },
+            { name: "Algieba", desc: "Smooth (부드러운)" },
+            { name: "Despina", desc: "Smooth (부드러운)" },
+            { name: "Erinome", desc: "Clear (맑은)" },
+            { name: "Algenib", desc: "Gravelly (거친)" },
+            { name: "Rasalgethi", desc: "Informative (정보형)" },
+            { name: "Laomedeia", desc: "Upbeat (경쾌한)" },
+            { name: "Achernar", desc: "Soft (부드러운)" },
+            { name: "Alnilam", desc: "Firm (단단한)" },
+            { name: "Schedar", desc: "Even (균형잡힌)" },
+            { name: "Gacrux", desc: "Mature (성숙한)" },
+            { name: "Pulcherrima", desc: "Forward (적극적)" },
+            { name: "Achird", desc: "Friendly (친근한)" },
+            { name: "Zubenelgenubi", desc: "Casual (캐주얼)" },
+            { name: "Vindemiatrix", desc: "Gentle (온화한)" },
+            { name: "Sadachbia", desc: "Lively (활발한)" },
+            { name: "Sadaltager", desc: "Knowledgeable (지적)" },
+            { name: "Sulafat", desc: "Warm (따뜻한)" },
+        ];
 
-<!-- JSZip CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-<script>
-// ============================================================
-// Global State
-// ============================================================
-let parsedCharacters = {};
-let parsedLines = [];
-let mergedLines = [];
-let generatedClips = [];
-let audioBlobs = {};
-let stopRequested = false;
-
-const ALL_VOICES = [
-    {name:"Zephyr",desc:"Bright (밝은)"},
-    {name:"Charon",desc:"Informative (깊은)"},
-    {name:"Kore",desc:"Firm (단단한)"},
-    {name:"Fenrir",desc:"Excitable (거친)"},
-    {name:"Leda",desc:"Youthful (여린)"},
-    {name:"Orus",desc:"Firm (무거운)"},
-    {name:"Aoede",desc:"Breezy (산뜻한)"},
-    {name:"Callirrhoe",desc:"Casual (캐주얼)"},
-    {name:"Autonoe",desc:"Bright (밝은)"},
-    {name:"Iapetus",desc:"Clear (맑은)"},
-    {name:"Umbriel",desc:"Casual (캐주얼)"},
-    {name:"Algieba",desc:"Smooth (부드러운)"},
-    {name:"Despina",desc:"Smooth (부드러운)"},
-    {name:"Erinome",desc:"Clear (맑은)"},
-    {name:"Algenib",desc:"Gravelly (거친)"},
-    {name:"Rasalgethi",desc:"Informative (정보형)"},
-    {name:"Laomedeia",desc:"Upbeat (경쾌한)"},
-    {name:"Achernar",desc:"Soft (부드러운)"},
-    {name:"Alnilam",desc:"Firm (단단한)"},
-    {name:"Schedar",desc:"Even (균형잡힌)"},
-    {name:"Gacrux",desc:"Mature (성숙한)"},
-    {name:"Pulcherrima",desc:"Forward (적극적)"},
-    {name:"Achird",desc:"Friendly (친근한)"},
-    {name:"Zubenelgenubi",desc:"Casual (캐주얼)"},
-    {name:"Vindemiatrix",desc:"Gentle (온화한)"},
-    {name:"Sadachbia",desc:"Lively (활발한)"},
-    {name:"Sadaltager",desc:"Knowledgeable (지적)"},
-    {name:"Sulafat",desc:"Warm (따뜻한)"},
-];
-
-const VOICE_AUTO_MAP = {
-    "남_아이":"Leda","남_10대":"Leda","남_20대":"Orus","남_30대":"Orus","남_청년":"Orus",
-    "남_40대":"Charon","남_50대":"Charon","남_중년":"Charon",
-    "남_60대":"Fenrir","남_70대":"Fenrir","남_노년":"Fenrir",
-    "여_아이":"Leda","여_10대":"Zephyr","여_20대":"Zephyr","여_청년":"Zephyr",
-    "여_30대":"Aoede","여_40대":"Aoede","여_중년":"Aoede",
-    "여_50대":"Gacrux","여_60대":"Gacrux","여_70대":"Gacrux","여_노년":"Gacrux",
-};
-
-// ============================================================
-// Tab Switching
-// ============================================================
-function switchTab(name) {
-    document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById('tab-'+name).classList.add('active');
-    const tabNames = ['script','characters','generate','results'];
-    document.querySelectorAll('.tab-btn')[tabNames.indexOf(name)].classList.add('active');
-}
-
-// ============================================================
-// Auto Voice Matching
-// ============================================================
-function autoMatchVoice(gender, ageStr) {
-    let key = gender + '_' + ageStr;
-    if (VOICE_AUTO_MAP[key]) return VOICE_AUTO_MAP[key];
-    const nums = ageStr.match(/\d+/);
-    if (nums) {
-        const age = parseInt(nums[0]);
-        let cat;
-        if (age <= 12) cat = '아이';
-        else if (age <= 19) cat = '10대';
-        else if (age <= 29) cat = '20대';
-        else if (age <= 39) cat = '30대';
-        else if (age <= 49) cat = '40대';
-        else if (age <= 59) cat = '50대';
-        else if (age <= 69) cat = '60대';
-        else cat = '70대';
-        key = gender + '_' + cat;
-        if (VOICE_AUTO_MAP[key]) return VOICE_AUTO_MAP[key];
-    }
-    return gender === '남' ? 'Charon' : 'Aoede';
-}
-
-// ============================================================
-// Script Parsing
-// ============================================================
-function parseScript() {
-    const text = document.getElementById('scriptInput').value;
-    if (!text.trim()) { alert('대본을 입력해 주세요.'); return; }
-
-    const parts = text.split(/={3,}\s*본문\s*={3,}/);
-    const charSection = parts.length >= 2 ? parts[0] : '';
-    const bodySection = parts.length >= 2 ? parts[1] : text;
-
-    // Parse characters - with voice
-    parsedCharacters = {};
-    const charWithVoice = /\[캐릭터\/([^/]+)\/성별:([^/]+)\/나이:([^/]+)\/톤:([^/]+)\/음성:([^\]]+)\]/g;
-    let m;
-    while ((m = charWithVoice.exec(charSection)) !== null) {
-        parsedCharacters[m[1].trim()] = {
-            gender: m[2].trim(), age: m[3].trim(), tone: m[4].trim(),
-            voice: m[5].trim(), voiceSource: '직접지정'
+        const VOICE_AUTO_MAP = {
+            "남_아이": "Leda", "남_10대": "Leda", "남_20대": "Orus", "남_30대": "Orus", "남_청년": "Orus",
+            "남_40대": "Charon", "남_50대": "Charon", "남_중년": "Charon",
+            "남_60대": "Fenrir", "남_70대": "Fenrir", "남_노년": "Fenrir",
+            "여_아이": "Leda", "여_10대": "Zephyr", "여_20대": "Zephyr", "여_청년": "Zephyr",
+            "여_30대": "Aoede", "여_40대": "Aoede", "여_중년": "Aoede",
+            "여_50대": "Gacrux", "여_60대": "Gacrux", "여_70대": "Gacrux", "여_노년": "Gacrux",
         };
-    }
-    // Parse characters - without voice
-    const charNoVoice = /\[캐릭터\/([^/]+)\/성별:([^/]+)\/나이:([^/]+)\/톤:([^\]]+)\]/g;
-    while ((m = charNoVoice.exec(charSection)) !== null) {
-        const name = m[1].trim();
-        if (parsedCharacters[name]) continue;
-        const gender = m[2].trim();
-        const age = m[3].trim();
-        parsedCharacters[name] = {
-            gender, age, tone: m[4].trim(),
-            voice: autoMatchVoice(gender, age), voiceSource: '자동매칭'
-        };
-    }
-    if (!parsedCharacters['나레이션']) {
-        parsedCharacters['나레이션'] = {
-            gender:'남', age:'40대', tone:'차분하고 깊은 목소리',
-            voice: autoMatchVoice('남','40대'), voiceSource: '기본값'
-        };
-    }
 
-    // Parse body lines
-    parsedLines = [];
-    const sceneRe = /\[장면전환\/이미지:\s*(.+)\]/;
-    const lineRe = /\[([^/\]]+)\/([^\]]+)\]\s*(.+)/;
-
-    bodySection.trim().split('\n').forEach(raw => {
-        raw = raw.trim();
-        if (!raw || raw.startsWith('#') || raw.startsWith('=')) return;
-        let sm = sceneRe.exec(raw);
-        if (sm) { parsedLines.push({type:'scene_change', description:sm[1].trim()}); return; }
-        let lm = lineRe.exec(raw);
-        if (lm) {
-            const speaker = lm[1].trim();
-            const emotion = lm[2].trim();
-            let txt = lm[3].trim().replace(/^[""\u201c]+|[""\u201d]+$/g, '');
-            parsedLines.push({
-                type: speaker === '나레이션' ? 'narration' : 'dialogue',
-                speaker, emotion, text: txt
-            });
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + name).classList.add('active');
+            const tabNames = ['script', 'characters', 'generate', 'results'];
+            document.querySelectorAll('.tab-btn')[tabNames.indexOf(name)].classList.add('active');
         }
-    });
 
-    document.getElementById('parseStatus').textContent =
-        `✅ ${Object.keys(parsedCharacters).length}명, ${parsedLines.length}줄 파싱 완료`;
+        function autoMatchVoice(gender, ageStr) {
+            let key = gender + '_' + ageStr;
+            if (VOICE_AUTO_MAP[key]) return VOICE_AUTO_MAP[key];
+            const nums = ageStr.match(/\d+/);
+            if (nums) {
+                const age = parseInt(nums[0]);
+                let cat;
+                if (age <= 12) cat = '아이';
+                else if (age <= 19) cat = '10대';
+                else if (age <= 29) cat = '20대';
+                else if (age <= 39) cat = '30대';
+                else if (age <= 49) cat = '40대';
+                else if (age <= 59) cat = '50대';
+                else if (age <= 69) cat = '60대';
+                else cat = '70대';
+                key = gender + '_' + cat;
+                if (VOICE_AUTO_MAP[key]) return VOICE_AUTO_MAP[key];
+            }
+            return gender === '남' ? 'Charon' : 'Aoede';
+        }
 
-    renderCharTable();
-    switchTab('characters');
-}
+        function parseScript() {
+            const text = document.getElementById('scriptInput').value;
+            if (!text.trim()) { alert('대본을 입력해 주세요.'); return; }
+            const parts = text.split(/={3,}\s*본문\s*={3,}/);
+            const charSection = parts.length >= 2 ? parts[0] : '';
+            const bodySection = parts.length >= 2 ? parts[1] : text;
+            parsedCharacters = {};
+            const charWithVoice = /\[캐릭터\/([^/]+)\/성별:([^/]+)\/나이:([^/]+)\/톤:([^/]+)\/음성:([^\]]+)\]/g;
+            let m;
+            while ((m = charWithVoice.exec(charSection)) !== null) {
+                parsedCharacters[m[1].trim()] = {
+                    gender: m[2].trim(), age: m[3].trim(), tone: m[4].trim(),
+                    voice: m[5].trim(), voiceSource: '직접지정'
+                };
+            }
+            const charNoVoice = /\[캐릭터\/([^/]+)\/성별:([^/]+)\/나이:([^/]+)\/톤:([^\]]+)\]/g;
+            while ((m = charNoVoice.exec(charSection)) !== null) {
+                const name = m[1].trim();
+                if (parsedCharacters[name]) continue;
+                const gender = m[2].trim();
+                const age = m[3].trim();
+                parsedCharacters[name] = {
+                    gender, age, tone: m[4].trim(),
+                    voice: autoMatchVoice(gender, age), voiceSource: '자동매칭'
+                };
+            }
+            if (!parsedCharacters['나레이션']) {
+                parsedCharacters['나레이션'] = {
+                    gender: '남', age: '40대', tone: '차분하고 깊은 목소리',
+                    voice: autoMatchVoice('남', '40대'), voiceSource: '기본값'
+                };
+            }
+            parsedLines = [];
+            const sceneRe = /\[장면전환\/이미지:\s*(.+)\]/;
+            const lineRe = /\[([^/\]]+)\/([^\]]+)\]\s*(.+)/;
+            bodySection.trim().split('\n').forEach(raw => {
+                raw = raw.trim();
+                if (!raw || raw.startsWith('#') || raw.startsWith('=')) return;
+                let sm = sceneRe.exec(raw);
+                if (sm) { parsedLines.push({ type: 'scene_change', description: sm[1].trim() }); return; }
+                let lm = lineRe.exec(raw);
+                if (lm) {
+                    const speaker = lm[1].trim();
+                    const emotion = lm[2].trim();
+                    let txt = lm[3].trim().replace(/^[""\u201c]+|[""\u201d]+$/g, '');
+                    parsedLines.push({
+                        type: speaker === '나레이션' ? 'narration' : 'dialogue',
+                        speaker, emotion, text: txt
+                    });
+                }
+            });
+            document.getElementById('parseStatus').textContent =
+                `✅ ${Object.keys(parsedCharacters).length}명, ${parsedLines.length}줄 파싱 완료`;
+            renderCharTable();
+            switchTab('characters');
+        }
 
-// ============================================================
-// Character Table Render
-// ============================================================
-function renderCharTable() {
-    let html = '<table class="char-table"><tr><th>캐릭터</th><th>성별</th><th>나이</th><th>톤</th><th>음성</th><th>매칭</th></tr>';
-    for (const [name, info] of Object.entries(parsedCharacters)) {
-        html += `<tr>
+        function renderCharTable() {
+            let html = '<table class="char-table"><tr><th>캐릭터</th><th>성별</th><th>나이</th><th>톤</th><th>음성</th><th>매칭</th></tr>';
+            for (const [name, info] of Object.entries(parsedCharacters)) {
+                html += `<tr>
             <td><strong>${name}</strong></td>
             <td>${info.gender}</td>
             <td>${info.age}</td>
             <td style="font-size:0.85em;color:#aaa;">${info.tone}</td>
             <td><select id="voice_${name}" onchange="updateVoice('${name}', this.value)">`;
-        ALL_VOICES.forEach(v => {
-            const sel = v.name === info.voice ? 'selected' : '';
-            html += `<option value="${v.name}" ${sel}>${v.name} - ${v.desc}</option>`;
-        });
-        html += `</select></td>
-            <td><span class="char-badge ${info.voiceSource==='직접지정'?'badge-manual':'badge-auto'}">${info.voiceSource}</span></td>
+                ALL_VOICES.forEach(v => {
+                    const sel = v.name === info.voice ? 'selected' : '';
+                    html += `<option value="${v.name}" ${sel}>${v.name} - ${v.desc}</option>`;
+                });
+                html += `</select></td>
+            <td><span class="char-badge ${info.voiceSource === '직접지정' ? 'badge-manual' : 'badge-auto'}">${info.voiceSource}</span></td>
         </tr>`;
-    }
-    html += '</table>';
-    document.getElementById('charTableWrap').innerHTML = html;
-}
-
-function updateVoice(name, voice) {
-    parsedCharacters[name].voice = voice;
-    parsedCharacters[name].voiceSource = '직접지정';
-    renderCharTable();
-}
-
-// ============================================================
-// Merge Narrations
-// ============================================================
-function mergeNarrations(lines, maxMerge) {
-    const merged = [];
-    let buffer = null;
-    lines.forEach(line => {
-        if (line.type === 'narration') {
-            if (buffer && buffer.emotion === line.emotion && buffer._count < maxMerge) {
-                buffer.text += ' ' + line.text;
-                buffer._count++;
-            } else {
-                if (buffer) merged.push(buffer);
-                buffer = {...line, _count: 1};
             }
-        } else {
-            if (buffer) { merged.push(buffer); buffer = null; }
-            merged.push(line);
+            html += '</table>';
+            document.getElementById('charTableWrap').innerHTML = html;
         }
-    });
-    if (buffer) merged.push(buffer);
-    merged.forEach(m => delete m._count);
-    return merged;
-}
 
-// ============================================================
-// TTS Prompt Builder
-// ============================================================
-function buildPrompt(line) {
-    const char = parsedCharacters[line.speaker] || parsedCharacters['나레이션'];
-    if (line.type === 'narration') {
-        return `당신은 ${char.age} ${char.gender}성 내레이터입니다. 목소리 특성: ${char.tone}. 현재 톤: ${line.emotion}. 다음 내레이션을 읽어주세요:\n\n${line.text}`;
-    } else {
-        return `당신은 ${char.age} ${char.gender}성 캐릭터 '${line.speaker}'입니다. 목소리 특성: ${char.tone}. 현재 감정: ${line.emotion}. 다음 대사를 연기하듯 말해주세요:\n\n"${line.text}"`;
-    }
-}
+        function updateVoice(name, voice) {
+            parsedCharacters[name].voice = voice;
+            parsedCharacters[name].voiceSource = '직접지정';
+            renderCharTable();
+        }
 
-function getVoice(line) {
-    const char = parsedCharacters[line.speaker] || parsedCharacters['나레이션'];
-    return char.voice;
-}
+        function mergeNarrations(lines, maxMerge) {
+            const merged = [];
+            let buffer = null;
+            lines.forEach(line => {
+                if (line.type === 'narration') {
+                    if (buffer && buffer.emotion === line.emotion && buffer._count < maxMerge) {
+                        buffer.text += ' ' + line.text;
+                        buffer._count++;
+                    } else {
+                        if (buffer) merged.push(buffer);
+                        buffer = { ...line, _count: 1 };
+                    }
+                } else {
+                    if (buffer) { merged.push(buffer); buffer = null; }
+                    merged.push(line);
+                }
+            });
+            if (buffer) merged.push(buffer);
+            merged.forEach(m => delete m._count);
+            return merged;
+        }
 
-// ============================================================
-// Gemini TTS API Call
-// ============================================================
-async function callTTS(apiKey, prompt, voiceName) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-    const body = {
-        contents: [{parts:[{text: prompt}]}],
-        generationConfig: {
-            responseModalities: ["AUDIO"],
-            speechConfig: {
-                voiceConfig: {
-                    prebuiltVoiceConfig: { voiceName: voiceName }
+        function buildPrompt(line) {
+            const char = parsedCharacters[line.speaker] || parsedCharacters['나레이션'];
+            if (line.type === 'narration') {
+                return `당신은 ${char.age} ${char.gender}성 내레이터입니다. 목소리 특성: ${char.tone}. 현재 톤: ${line.emotion}. 다음 내레이션을 읽어주세요:\n\n${line.text}`;
+            } else {
+                return `당신은 ${char.age} ${char.gender}성 캐릭터 '${line.speaker}'입니다. 목소리 특성: ${char.tone}. 현재 감정: ${line.emotion}. 다음 대사를 연기하듯 말해주세요:\n\n"${line.text}"`;
+            }
+        }
+
+        function getVoice(line) {
+            const char = parsedCharacters[line.speaker] || parsedCharacters['나레이션'];
+            return char.voice;
+        }
+
+        async function callTTS(apiKey, prompt, voiceName) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            const body = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: voiceName }
+                        }
+                    }
+                }
+            };
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!resp.ok) {
+                const err = await resp.text();
+                throw new Error(`API Error ${resp.status}: ${err.substring(0, 200)}`);
+            }
+            const data = await resp.json();
+            const b64 = data.candidates[0].content.parts[0].inlineData.data;
+            const pcm = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+            return pcmToWavBlob(pcm, 24000, 1, 16);
+        }
+
+        function pcmToWavBlob(pcmData, sampleRate, channels, bitDepth) {
+            const dataLen = pcmData.length;
+            const buffer = new ArrayBuffer(44 + dataLen);
+            const view = new DataView(buffer);
+            function writeStr(offset, str) { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); }
+            writeStr(0, 'RIFF');
+            view.setUint32(4, 36 + dataLen, true);
+            writeStr(8, 'WAVE');
+            writeStr(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, channels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * channels * (bitDepth / 8), true);
+            view.setUint16(32, channels * (bitDepth / 8), true);
+            view.setUint16(34, bitDepth, true);
+            writeStr(36, 'data');
+            view.setUint32(40, dataLen, true);
+            new Uint8Array(buffer, 44).set(pcmData);
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        function wavBlobToMp3Blob(wavBlob) {
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = function () {
+                    const wavBuf = new Int16Array(this.result, 44);
+                    const mp3enc = new lamejs.Mp3Encoder(1, 24000, 192);
+                    const blockSize = 1152;
+                    const mp3Data = [];
+                    for (let i = 0; i < wavBuf.length; i += blockSize) {
+                        const chunk = wavBuf.subarray(i, i + blockSize);
+                        const mp3buf = mp3enc.encodeBuffer(chunk);
+                        if (mp3buf.length > 0) mp3Data.push(mp3buf);
+                    }
+                    const end = mp3enc.flush();
+                    if (end.length > 0) mp3Data.push(end);
+                    const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+                    resolve(blob);
+                };
+                reader.readAsArrayBuffer(wavBlob);
+            });
+        }
+
+        function getAudioDuration(blob) {
+            return new Promise(resolve => {
+                const url = URL.createObjectURL(blob);
+                const audio = new Audio();
+                audio.onloadedmetadata = () => { resolve(Math.round(audio.duration * 1000) / 1000); URL.revokeObjectURL(url); };
+                audio.onerror = () => { resolve(0); URL.revokeObjectURL(url); };
+                audio.src = url;
+            });
+        }
+
+        function addLog(msg, cls = '') {
+            const log = document.getElementById('logArea');
+            log.innerHTML += `<div class="${cls}">${msg}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function startGeneration() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (!apiKey) { alert('API 키를 입력해 주세요.'); return; }
+            if (parsedLines.length === 0) { alert('먼저 대본을 분석해 주세요.'); return; }
+            const maxMerge = parseInt(document.getElementById('mergeCount').value);
+            const delay = parseFloat(document.getElementById('apiDelay').value) * 1000;
+            mergedLines = mergeNarrations(parsedLines, maxMerge);
+            const ttsLines = mergedLines.filter(l => l.type === 'narration' || l.type === 'dialogue');
+            document.getElementById('statTotal').textContent = ttsLines.length;
+            document.getElementById('statTime').textContent = (ttsLines.length * (delay / 1000 + 2) / 60).toFixed(1);
+            document.getElementById('statDone').textContent = '0';
+            document.getElementById('statFail').textContent = '0';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressFill').textContent = '0%';
+            document.getElementById('logArea').innerHTML = '';
+            document.getElementById('btnGenerate').disabled = true;
+            document.getElementById('btnStop').disabled = false;
+            generatedClips = [];
+            audioBlobs = {};
+            stopRequested = false;
+            let done = 0, fail = 0, ttsIdx = 0;
+            addLog(`[시작] TTS 생성 ${ttsLines.length}건, 나레이션 묶기: ${maxMerge}문장`, 'log-info');
+            for (const item of mergedLines) {
+                if (stopRequested) { addLog('[중지됨]', 'log-fail'); break; }
+                if (item.type === 'scene_change') {
+                    generatedClips.push({ type: 'scene_change', description: item.description, audioFile: null, duration: 0 });
+                    continue;
+                }
+                if (item.type !== 'narration' && item.type !== 'dialogue') continue;
+                ttsIdx++;
+                const fileNum = String(ttsIdx).padStart(3, '0');
+                const prompt = buildPrompt(item);
+                const voice = getVoice(item);
+                const label = item.type === 'narration' ? '나레이션' : item.speaker;
+                const preview = item.text.length > 35 ? item.text.substring(0, 35) + '...' : item.text;
+                addLog(`[${fileNum}/${ttsLines.length}] ${label} (${item.emotion}) → ${voice}`);
+                addLog(`  "${preview}"`);
+                try {
+                    const wavBlob = await callTTS(apiKey, prompt, voice);
+                    const duration = await getAudioDuration(wavBlob);
+                    const mp3Blob = await wavBlobToMp3Blob(wavBlob);
+                    audioBlobs[fileNum] = mp3Blob;
+                    generatedClips.push({
+                        ttsIndex: ttsIdx, type: item.type, speaker: item.speaker,
+                        emotion: item.emotion, text: item.text, voice: voice,
+                        audioFile: `${fileNum}.mp3`, duration: duration
+                    });
+                    done++;
+                    addLog(`  ✅ ${fileNum}.mp3 (${duration}초)`, 'log-ok');
+                } catch (e) {
+                    fail++;
+                    generatedClips.push({
+                        ttsIndex: ttsIdx, type: item.type, speaker: item.speaker,
+                        text: item.text, audioFile: null, duration: 0, error: e.message
+                    });
+                    addLog(`  ❌ 실패: ${e.message}`, 'log-fail');
+                }
+                document.getElementById('statDone').textContent = done;
+                document.getElementById('statFail').textContent = fail;
+                const pct = Math.round((done + fail) / ttsLines.length * 100);
+                document.getElementById('progressFill').style.width = pct + '%';
+                document.getElementById('progressFill').textContent = pct + '%';
+                if (ttsIdx < ttsLines.length && !stopRequested) {
+                    await new Promise(r => setTimeout(r, delay));
                 }
             }
-        }
-    };
-    const resp = await fetch(url, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(body)
-    });
-    if (!resp.ok) {
-        const err = await resp.text();
-        throw new Error(`API Error ${resp.status}: ${err.substring(0, 200)}`);
-    }
-    const data = await resp.json();
-    const b64 = data.candidates[0].content.parts[0].inlineData.data;
-    // base64 PCM -> WAV blob
-    const pcm = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    return pcmToWavBlob(pcm, 24000, 1, 16);
-}
-
-function pcmToWavBlob(pcmData, sampleRate, channels, bitDepth) {
-    const dataLen = pcmData.length;
-    const buffer = new ArrayBuffer(44 + dataLen);
-    const view = new DataView(buffer);
-    function writeStr(offset, str) { for(let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); }
-    writeStr(0, 'RIFF');
-    view.setUint32(4, 36 + dataLen, true);
-    writeStr(8, 'WAVE');
-    writeStr(12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, channels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * channels * (bitDepth/8), true);
-    view.setUint16(32, channels * (bitDepth/8), true);
-    view.setUint16(34, bitDepth, true);
-    writeStr(36, 'data');
-    view.setUint32(40, dataLen, true);
-    new Uint8Array(buffer, 44).set(pcmData);
-    return new Blob([buffer], {type: 'audio/wav'});
-}
-
-function getAudioDuration(blob) {
-    return new Promise(resolve => {
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio();
-        audio.onloadedmetadata = () => { resolve(Math.round(audio.duration * 1000) / 1000); URL.revokeObjectURL(url); };
-        audio.onerror = () => { resolve(0); URL.revokeObjectURL(url); };
-        audio.src = url;
-    });
-}
-
-// ============================================================
-// Logging
-// ============================================================
-function addLog(msg, cls='') {
-    const log = document.getElementById('logArea');
-    log.innerHTML += `<div class="${cls}">${msg}</div>`;
-    log.scrollTop = log.scrollHeight;
-}
-
-// ============================================================
-// Generation
-// ============================================================
-async function startGeneration() {
-    const apiKey = document.getElementById('apiKey').value.trim();
-    if (!apiKey) { alert('API 키를 입력해 주세요.'); return; }
-    if (parsedLines.length === 0) { alert('먼저 대본을 분석해 주세요.'); return; }
-
-    const maxMerge = parseInt(document.getElementById('mergeCount').value);
-    const delay = parseFloat(document.getElementById('apiDelay').value) * 1000;
-
-    mergedLines = mergeNarrations(parsedLines, maxMerge);
-    const ttsLines = mergedLines.filter(l => l.type === 'narration' || l.type === 'dialogue');
-
-    document.getElementById('statTotal').textContent = ttsLines.length;
-    document.getElementById('statTime').textContent = (ttsLines.length * (delay/1000 + 2) / 60).toFixed(1);
-    document.getElementById('statDone').textContent = '0';
-    document.getElementById('statFail').textContent = '0';
-    document.getElementById('progressFill').style.width = '0%';
-    document.getElementById('progressFill').textContent = '0%';
-    document.getElementById('logArea').innerHTML = '';
-    document.getElementById('btnGenerate').disabled = true;
-    document.getElementById('btnStop').disabled = false;
-
-    generatedClips = [];
-    audioBlobs = {};
-    stopRequested = false;
-    let done = 0, fail = 0, ttsIdx = 0;
-
-    addLog(`[시작] TTS 생성 ${ttsLines.length}건, 나레이션 묶기: ${maxMerge}문장`, 'log-info');
-
-    for (const item of mergedLines) {
-        if (stopRequested) { addLog('[중지됨]', 'log-fail'); break; }
-
-        if (item.type === 'scene_change') {
-            generatedClips.push({type:'scene_change', description:item.description, audioFile:null, duration:0});
-            continue;
-        }
-        if (item.type !== 'narration' && item.type !== 'dialogue') continue;
-
-        ttsIdx++;
-        const fileNum = String(ttsIdx).padStart(3, '0');
-        const prompt = buildPrompt(item);
-        const voice = getVoice(item);
-        const label = item.type === 'narration' ? '나레이션' : item.speaker;
-        const preview = item.text.length > 35 ? item.text.substring(0,35)+'...' : item.text;
-
-        addLog(`[${fileNum}/${ttsLines.length}] ${label} (${item.emotion}) → ${voice}`);
-        addLog(`  "${preview}"`);
-
-        try {
-            const wavBlob = await callTTS(apiKey, prompt, voice);
-            const duration = await getAudioDuration(wavBlob);
-            audioBlobs[fileNum] = wavBlob;
-            generatedClips.push({
-                ttsIndex: ttsIdx, type: item.type, speaker: item.speaker,
-                emotion: item.emotion, text: item.text, voice: voice,
-                audioFile: `${fileNum}.wav`, duration: duration
-            });
-            done++;
-            addLog(`  ✅ ${fileNum}.wav (${duration}초)`, 'log-ok');
-        } catch(e) {
-            fail++;
-            generatedClips.push({
-                ttsIndex: ttsIdx, type: item.type, speaker: item.speaker,
-                text: item.text, audioFile: null, duration: 0, error: e.message
-            });
-            addLog(`  ❌ 실패: ${e.message}`, 'log-fail');
+            const totalDur = generatedClips.reduce((s, c) => s + (c.duration || 0), 0);
+            addLog(`\n[완료] 성공: ${done}, 실패: ${fail}, 총 재생시간: ${totalDur.toFixed(1)}초 (${(totalDur / 60).toFixed(1)}분)`, 'log-info');
+            document.getElementById('btnGenerate').disabled = false;
+            document.getElementById('btnStop').disabled = true;
+            document.getElementById('apiStatus').textContent = '🟢 사용됨';
+            renderResults();
+            switchTab('results');
         }
 
-        document.getElementById('statDone').textContent = done;
-        document.getElementById('statFail').textContent = fail;
-        const pct = Math.round((done + fail) / ttsLines.length * 100);
-        document.getElementById('progressFill').style.width = pct + '%';
-        document.getElementById('progressFill').textContent = pct + '%';
-
-        if (ttsIdx < ttsLines.length && !stopRequested) {
-            await new Promise(r => setTimeout(r, delay));
+        function stopGeneration() {
+            stopRequested = true;
+            document.getElementById('btnStop').disabled = true;
         }
-    }
 
-    const totalDur = generatedClips.reduce((s,c) => s + (c.duration||0), 0);
-    addLog(`\n[완료] 성공: ${done}, 실패: ${fail}, 총 재생시간: ${totalDur.toFixed(1)}초 (${(totalDur/60).toFixed(1)}분)`, 'log-info');
-
-    document.getElementById('btnGenerate').disabled = false;
-    document.getElementById('btnStop').disabled = true;
-    document.getElementById('apiStatus').textContent = '🟢 사용됨';
-
-    renderResults();
-    switchTab('results');
-}
-
-function stopGeneration() {
-    stopRequested = true;
-    document.getElementById('btnStop').disabled = true;
-}
-
-// ============================================================
-// Results
-// ============================================================
-function renderResults() {
-    let html = '';
-    generatedClips.forEach((clip, i) => {
-        if (clip.type === 'scene_change') {
-            html += `<div class="result-item" style="border-left:3px solid #e94560;">
+        function renderResults() {
+            let html = '';
+            generatedClips.forEach((clip, i) => {
+                if (clip.type === 'scene_change') {
+                    html += `<div class="result-item" style="border-left:3px solid #e94560;">
                 <div class="num">🎬</div>
                 <div class="info">장면전환: ${clip.description}</div>
             </div>`;
-            return;
-        }
-        if (!clip.audioFile) return;
-        const num = clip.audioFile.replace('.wav','');
-        const blob = audioBlobs[num];
-        const url = blob ? URL.createObjectURL(blob) : '';
-        const label = clip.type === 'narration' ? '나레이션' : clip.speaker;
-        html += `<div class="result-item">
+                    return;
+                }
+                if (!clip.audioFile) return;
+                const num = clip.audioFile.replace('.mp3', '');
+                const blob = audioBlobs[num];
+                const url = blob ? URL.createObjectURL(blob) : '';
+                const label = clip.type === 'narration' ? '나레이션' : clip.speaker;
+                html += `<div class="result-item">
             <div class="num">${num}</div>
-            <div class="info"><span class="speaker-tag">${label}</span> (${clip.emotion})<br><small>${clip.text.substring(0,60)}${clip.text.length>60?'...':''}</small></div>
+            <div class="info"><span class="speaker-tag">${label}</span> (${clip.emotion})<br><small>${clip.text.substring(0, 60)}${clip.text.length > 60 ? '...' : ''}</small></div>
             <div class="duration">${clip.duration}s</div>
             ${url ? `<audio controls src="${url}" preload="none"></audio>` : ''}
         </div>`;
-    });
-    document.getElementById('resultsList').innerHTML = html || '<p style="color:#888;">생성된 결과가 없습니다.</p>';
-}
+            });
+            document.getElementById('resultsList').innerHTML = html || '<p style="color:#888;">생성된 결과가 없습니다.</p>';
+        }
 
-// ============================================================
-// Download
-// ============================================================
-async function downloadAllZip() {
-    if (Object.keys(audioBlobs).length === 0) { alert('생성된 파일이 없습니다.'); return; }
-    const zip = new JSZip();
-    const media = zip.folder('media');
-    for (const [name, blob] of Object.entries(audioBlobs)) {
-        media.file(name + '.wav', blob);
-    }
-    const mapping = {
-        project_info: {
-            created: new Date().toISOString(),
-            total_tts_files: Object.keys(audioBlobs).length,
-            characters: parsedCharacters
-        },
-        clips: generatedClips
-    };
-    zip.file('mapping.json', JSON.stringify(mapping, null, 2));
-    const content = await zip.generateAsync({type:'blob'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(content);
-    a.download = 'gd_tts_output.zip';
-    a.click();
-}
+        async function downloadAllZip() {
+            if (Object.keys(audioBlobs).length === 0) { alert('생성된 파일이 없습니다.'); return; }
+            const zip = new JSZip();
+            const media = zip.folder('media');
+            for (const [name, blob] of Object.entries(audioBlobs)) {
+                media.file(name + '.mp3', blob);
+            }
+            const mapping = {
+                project_info: {
+                    created: new Date().toISOString(),
+                    total_tts_files: Object.keys(audioBlobs).length,
+                    characters: parsedCharacters
+                },
+                clips: generatedClips
+            };
+            zip.file('mapping.json', JSON.stringify(mapping, null, 2));
+            const content = await zip.generateAsync({ type: 'blob' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(content);
+            a.download = 'gd_tts_output.zip';
+            a.click();
+        }
 
-function downloadMapping() {
-    const mapping = {
-        project_info: { created: new Date().toISOString(), characters: parsedCharacters },
-        clips: generatedClips
-    };
-    const blob = new Blob([JSON.stringify(mapping, null, 2)], {type:'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'mapping.json';
-    a.click();
-}
+        function downloadMapping() {
+            const mapping = {
+                project_info: { created: new Date().toISOString(), characters: parsedCharacters },
+                clips: generatedClips
+            };
+            const blob = new Blob([JSON.stringify(mapping, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'mapping.json';
+            a.click();
+        }
 
-// ============================================================
-// File Load & Sample
-// ============================================================
-function loadFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => { document.getElementById('scriptInput').value = e.target.result; };
-    reader.readAsText(file);
-}
+        function loadFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => { document.getElementById('scriptInput').value = e.target.result; };
+            reader.readAsText(file);
+        }
 
-function loadSample() {
-    document.getElementById('scriptInput').value = `========== 등장인물 ==========
+        function loadSample() {
+            document.getElementById('scriptInput').value = `========== 등장인물 ==========
 [캐릭터/나레이션/성별:남/나이:40대/톤:차분하고 깊은 목소리로 이야기를 들려주는 내레이터]
 [캐릭터/막순/성별:여/나이:70대/톤:거칠지만 따뜻한 전라도 사투리 할머니]
 [캐릭터/소이/성별:여/나이:9세/톤:맑고 여린 아이 목소리]
@@ -660,13 +872,12 @@ function loadSample() {
 [장면전환/이미지: 겨울 산골 전경, 눈 내리는 초가집]
 [나레이션/무거운 톤으로] 그로부터 석 달 뒤, 뜻밖의 소식이 석교촌에 당도했습니다.
 [서진/경악하며] "설마… 니가…?"`;
-}
+        }
 
-// API Key status
-document.getElementById('apiKey').addEventListener('input', function() {
-    document.getElementById('apiStatus').textContent = this.value.trim() ? '🟡 입력됨' : '⚪ 미입력';
-});
-</script>
+        document.getElementById('apiKey').addEventListener('input', function () {
+            document.getElementById('apiStatus').textContent = this.value.trim() ? '🟡 입력됨' : '⚪ 미입력';
+        });
+    </script>
 </body>
-</html>
 
+</html>
