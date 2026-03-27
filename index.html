@@ -169,7 +169,7 @@ let characters = {}; let scriptLines = []; let ttsRequests = []; let audioBlobs 
 let isRunning = false; let isPaused = false; let totalDuration = 0; let completedCount = 0; let failedCount = 0; let startTime = 0;
 let apiKeys = []; let currentKeyIndex = 0; let keyUsageCounts = [];
 const KEY_SWITCH_THRESHOLD = 90;
-const REQUEST_DELAY = 6000;
+const REQUEST_DELAY = 8500;
 const MAX_RETRY = 3;
 const NARRATION_MERGE_MAX = 6;
 const DB_NAME = 'GD_TTS_Studio'; const DB_VERSION = 2; const STORE_NAME = 'tts_progress';
