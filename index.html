@@ -460,21 +460,24 @@ async function startGeneration(isResume = false) {
                     }
                 );
 
-                // ★★★ 수정된 429 에러 처리 ★★★
+                // ★★★ 제대로 수정된 429 에러 처리 ★★★
                 if (!response.ok) {
                     let errMsg = '';
-                    try { const errData = await response.json(); errMsg = JSON.stringify(errData); } catch(e) { try { errMsg = await response.text(); } catch(e2) { errMsg = 'unknown'; } }
+                    try { 
+                        const errData = await response.json(); 
+                        errMsg = JSON.stringify(errData); 
+                    } catch(e) { 
+                        try { errMsg = await response.text(); } 
+                        catch(e2) { errMsg = 'unknown'; } 
+                    }
 
-
-
-                    
                     if (response.status === 429) {
                         addLog(`⏳ 일시적 제한 감지. 30초 대기 후 재시도...`, 'warn');
                         await sleep(30000);  // ← 핵심: 30초 대기 추가
                         retry--;
                         continue;
-                        }
                     }
+                    
                     throw new Error(`API ${response.status}: ${errMsg.substring(0, 200)}`);
                 }
 
