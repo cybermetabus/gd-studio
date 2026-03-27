@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GD TTS Studio v3.6</title>
+    <title>GD TTS Studio v3.7</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
     <style>
@@ -75,12 +75,12 @@
 <body>
     <div class="header">
         <h1>GD TTS Studio</h1>
-        <span class="version">v3.6 — 멀티키 + 429자동전환 + 중간저장</span>
+        <span class="version">v3.7 — 완벽한 429 에러 릴레이 바통터치 패치!</span>
     </div>
     <div class="api-bar">
         <label>Gemini API Keys (쉼표로 구분, 최대 10개):</label>
         <textarea id="apiKeys" placeholder="AIzaSy..._key1, AIzaSy..._key2, AIzaSy..._key3, AIzaSy..._key4, AIzaSy..._key5"></textarea>
-        <div class="hint">각 키는 하루 100건 제한. 429 에러 발생 시 자동으로 다음 키로 전환됩니다.</div>
+        <div class="hint">각 키는 하루 100건 제한. 429 에러 발생 시 자동으로 다음 키로 릴레이 전환됩니다.</div>
         <div class="key-status" id="keyStatus"></div>
     </div>
     <div class="tabs">
@@ -245,7 +245,7 @@ function switchToNextKey(reason) {
     const oldIdx = currentKeyIndex;
     currentKeyIndex++;
     if (currentKeyIndex >= apiKeys.length) { addLog('\n⛔ 모든 API 키 소진!', 'err'); return false; }
-    addLog(`\n🔑 키 전환: #${oldIdx+1} → #${currentKeyIndex+1} (사유: ${reason})`, 'warn');
+    addLog(`\n🔑 키 릴레이 전환: #${oldIdx+1} → #${currentKeyIndex+1} (사유: ${reason})`, 'warn');
     updateKeyStatus();
     return true;
 }
@@ -429,7 +429,7 @@ async function startGeneration(isResume = false) {
     }
     const ttsOnly = ttsRequests.filter(r => r.type !== 'scene');
     const totalTts = ttsOnly.length;
-    addLog(`[시작] TTS ${totalTts}건 | API 키 ${keyCnt}개`, 'info');
+    addLog(`[시작] TTS ${totalTts}건 | API 키 ${keyCnt}개 대기 중`, 'info');
 
     let ttsIndex = 0;
     for (let i = 0; i < ttsOnly.length; i++) {
@@ -460,7 +460,7 @@ async function startGeneration(isResume = false) {
                     }
                 );
 
-                // ★★★ 제대로 수정된 429 에러 처리 ★★★
+                // ★★★ 이 부분이 진짜 핵심 패치! 완벽한 바통 터치 로직 ★★★
                 if (!response.ok) {
                     let errMsg = '';
                     try { 
@@ -472,10 +472,15 @@ async function startGeneration(isResume = false) {
                     }
 
                     if (response.status === 429) {
-                        addLog(`⏳ 일시적 제한 감지. 30초 대기 후 재시도...`, 'warn');
-                        await sleep(30000);  // ← 핵심: 30초 대기 추가
-                        retry--;
-                        continue;
+                        addLog(`⏳ 429 에러 감지! 다음 API 키로 바통 터치합니다 🏃‍♂️💨`, 'warn');
+                        // 여기서 다음 키로 스위치! 실패하면 끝냄.
+                        if (!switchToNextKey('429 에러 (요청 제한)')) {
+                            throw new Error('모든 키 소진');
+                        }
+                        // 키 바꿨으니까 2초만 숨 고르고 냅다 다시 찌릅니다. (30초 멍때리기 삭제)
+                        await sleep(2000); 
+                        retry--; // 이건 재시도 횟수(MAX_RETRY) 안 깎아먹게 살려두는 용도
+                        continue; // 바뀐 키로 다시 요청 고고!
                     }
                     
                     throw new Error(`API ${response.status}: ${errMsg.substring(0, 200)}`);
@@ -498,7 +503,10 @@ async function startGeneration(isResume = false) {
                 success = true; break;
             } catch (err) {
                 addLog(`  ✗ ${err.message}`, 'err');
-                if (err.message === '모든 키 소진') break;
+                if (err.message === '모든 키 소진') {
+                    isRunning = false; // 모든 키가 끝났으니 전체 멈춤!
+                    break;
+                }
                 if (retry < MAX_RETRY - 1) { addLog(`  ↻ ${5*(retry+1)}초 후 재시도...`, 'warn'); await sleep(5000 * (retry + 1)); }
             }
         }
