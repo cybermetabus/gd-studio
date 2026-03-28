@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GD TTS Studio v4.2</title>
+<title>GD TTS Studio v4.3</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -44,24 +44,27 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
 .result-item .info .preview { color:#888; font-size:12px; margin-top:3px; }
 .result-item audio { margin-left:10px; }
 .settings-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-.settings-row > div { flex:1; min-width:200px; }
+.settings-row > div { flex:1; min-width:150px; }
 .key-status { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
 .key-badge { padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; }
 .key-active { background:#4ecca3; color:#1a1a2e; }
 .key-wait { background:#0f3460; color:#888; }
 .key-dead { background:#e94560; color:#fff; }
 .style-preview { background:#0f3460; border-radius:6px; padding:10px; margin-top:8px; color:#4ecca3; font-size:13px; font-style:italic; min-height:40px; }
+.checkbox-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
+.checkbox-row input[type=checkbox] { width:18px; height:18px; cursor:pointer; }
+.checkbox-row label { margin:0; cursor:pointer; color:#eee; font-size:14px; }
 </style>
 </head>
 <body>
 
 <h1>GD TTS Studio</h1>
-<div class="version">v4.2 — Zephyr 고정 | 멀티키 | 스타일 선택 | 문장 단위 분할</div>
+<div class="version">v4.3 — Zephyr 고정 | 멀티키 | 스타일 선택 | 자동 개별 다운로드</div>
 
 <!-- API 키 -->
 <div class="section">
   <h2>1. API 키</h2>
-  <label>Gemini API Key — 여러 개 입력 시 쉼표(,)로 구분. 429 에러 시 자동으로 다음 키로 전환됩니다.</label>
+  <label>Gemini API Key — 여러 개 입력 시 쉼표(,)로 구분</label>
   <input type="text" id="apiKey" placeholder="AIza...key1, AIza...key2, AIza...key3">
   <div class="key-status" id="keyStatus"></div>
 </div>
@@ -69,7 +72,7 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
 <!-- 대본 입력 -->
 <div class="section">
   <h2>2. 대본 입력</h2>
-  <label>대본을 그대로 붙여넣으세요. [ ], 【 】, ( ) 안의 내용은 자동으로 제거됩니다.</label>
+  <label>대본을 그대로 붙여넣으세요. [ ], 【 】, ( ) 안의 내용은 자동 제거됩니다.</label>
   <textarea id="scriptInput" placeholder="여기에 대본 전체를 붙여넣으세요..."></textarea>
   <div style="margin-top:8px; color:#888; font-size:12px;">
     <span id="charCount">0</span>자 | 예상 청크: <span id="chunkEstimate">0</span>개 | 예상 소요: <span id="timeEstimate">0</span>분
@@ -89,7 +92,6 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
   </select>
 
   <div class="style-preview" id="stylePreview">구연동화를 읽는 것처럼, 온화한 목소리로 아주 천천히 또박또박 정겹게 읽어줘.</div>
-
   <textarea class="style-textarea" id="customStyle" style="display:none;" placeholder="원하는 스타일을 직접 입력하세요..."></textarea>
 
   <div class="settings-row" style="margin-top:12px;">
@@ -105,6 +107,11 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
       <label>Temperature</label>
       <input type="text" id="temperature" value="1.35">
     </div>
+  </div>
+
+  <div class="checkbox-row">
+    <input type="checkbox" id="autoDownload" checked>
+    <label for="autoDownload">청크 완료 시 WAV 자동 개별 다운로드 (브라우저 꺼져도 안전)</label>
   </div>
 </div>
 
@@ -125,12 +132,11 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
   <div id="log"></div>
 </div>
 
-<!-- 결과 & 다운로드 -->
+<!-- 결과 -->
 <div class="section">
   <h2>5. 결과</h2>
   <div class="controls">
-    <button class="btn btn-download" id="btnDownloadZip" onclick="downloadZip()" disabled>ZIP 다운로드 (WAV + 대본)</button>
-    <button class="btn btn-download" id="btnDownloadVrew" onclick="downloadVrew()" disabled>VREW 파일 다운로드</button>
+    <button class="btn btn-download" id="btnDownloadZip" onclick="downloadZip()" disabled>전체 ZIP 다운로드</button>
   </div>
   <div class="results" id="results"></div>
 </div>
@@ -147,7 +153,6 @@ function onStyleChange() {
   const sel = document.getElementById('styleSelect').value;
   const preview = document.getElementById('stylePreview');
   const custom = document.getElementById('customStyle');
-
   if (sel === 'custom') {
     preview.style.display = 'none';
     custom.style.display = 'block';
@@ -162,9 +167,7 @@ function onStyleChange() {
 
 function getStyleText() {
   const sel = document.getElementById('styleSelect').value;
-  if (sel === 'custom') {
-    return document.getElementById('customStyle').value.trim();
-  }
+  if (sel === 'custom') return document.getElementById('customStyle').value.trim();
   return STYLE_PRESETS[sel];
 }
 
@@ -175,13 +178,12 @@ let isRunning = false;
 let isStopped = false;
 let startTime = 0;
 let timerInterval = null;
-
 let apiKeys = [];
 let currentKeyIndex = 0;
 let keyUsage = {};
 
 const VOICE = 'Zephyr';
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent';
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-tts:generateContent';
 
 // ─── 유틸 ───
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -196,7 +198,16 @@ function addLog(msg, type='info') {
   log.scrollTop = log.scrollHeight;
 }
 
-// ─── 키 상태 표시 ───
+// ─── 자동 파일 다운로드 ───
+function autoDownloadFile(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ─── 키 상태 ───
 function updateKeyStatus() {
   const container = document.getElementById('keyStatus');
   container.innerHTML = '';
@@ -218,7 +229,6 @@ function updateKeyStatus() {
   });
 }
 
-// ─── 다음 키로 전환 ───
 function switchToNextKey(reason) {
   const oldIndex = currentKeyIndex;
   for (let i = 1; i <= apiKeys.length; i++) {
@@ -253,7 +263,6 @@ function splitText(text, maxLen) {
   for (const sent of sentences) {
     if (sent.trim() === '') continue;
     const candidate = current ? current + sent : sent;
-
     if (candidate.length > maxLen && current.length > 0) {
       result.push(current.trim());
       current = sent;
@@ -265,7 +274,7 @@ function splitText(text, maxLen) {
   return result.filter(c => c.length > 0);
 }
 
-// ─── 글자수 표시 업데이트 ───
+// ─── 글자수 표시 ───
 document.getElementById('scriptInput').addEventListener('input', function() {
   const clean = cleanScript(this.value);
   const len = clean.length;
@@ -285,9 +294,7 @@ function pcmToWav(pcmData, sampleRate=24000, numChannels=1, bitsPerSample=16) {
   const dataSize = pcmData.byteLength;
   const buffer = new ArrayBuffer(44 + dataSize);
   const view = new DataView(buffer);
-
   function writeStr(offset, str) { for(let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); }
-
   writeStr(0, 'RIFF');
   view.setUint32(4, 36 + dataSize, true);
   writeStr(8, 'WAVE');
@@ -354,7 +361,7 @@ function startTimer() {
 }
 function stopTimer() { if (timerInterval) clearInterval(timerInterval); }
 
-// ─── 결과 항목 추가 ───
+// ─── 결과 항목 ───
 function addResultItem(fileNum, text, blob) {
   const div = document.createElement('div');
   div.className = 'result-item';
@@ -371,7 +378,6 @@ function addResultItem(fileNum, text, blob) {
 
 // ─── 메인 실행 ───
 async function startTTS() {
-  // 키 파싱
   apiKeys = document.getElementById('apiKey').value.split(',').map(k => k.trim()).filter(k => k);
   if (apiKeys.length === 0) { alert('API 키를 입력하세요.'); return; }
   currentKeyIndex = 0;
@@ -379,7 +385,6 @@ async function startTTS() {
   apiKeys.forEach((_, i) => keyUsage[i] = 0);
   updateKeyStatus();
 
-  // 스타일 확인
   const styleText = getStyleText();
   if (!styleText) { alert('음성 스타일을 입력하세요.'); return; }
 
@@ -389,30 +394,27 @@ async function startTTS() {
   const chunkSize = parseInt(document.getElementById('chunkSize').value) || 1500;
   const delay = parseInt(document.getElementById('requestDelay').value) || 25;
   const temperature = document.getElementById('temperature').value || '1.35';
+  const autoSave = document.getElementById('autoDownload').checked;
 
-  // 대본 정리 & 분할
   const cleanedScript = cleanScript(rawScript);
   chunks = splitText(cleanedScript, chunkSize);
   audioBlobs = {};
 
   if (chunks.length === 0) { alert('정리 후 대본이 비어있습니다.'); return; }
 
-  // 로그 초기화
   document.getElementById('log').innerHTML = '';
   document.getElementById('results').innerHTML = '';
 
   addLog(`스타일: ${styleText.substring(0, 50)}...`, 'info');
   addLog(`대본 정리 완료: ${cleanedScript.length}자 → ${chunks.length}개 청크`, 'ok');
   chunks.forEach((c, i) => addLog(`  청크 ${i+1}: ${c.length}자`, 'info'));
-  addLog(`API 키: ${apiKeys.length}개 | 간격: ${delay}초 | 분할: ${chunkSize}자 | Temp: ${temperature}`, 'info');
+  addLog(`API 키: ${apiKeys.length}개 | 간격: ${delay}초 | 분할: ${chunkSize}자 | 자동저장: ${autoSave ? 'ON' : 'OFF'}`, 'info');
 
-  // UI 업데이트
   isRunning = true;
   isStopped = false;
   document.getElementById('btnStart').disabled = true;
   document.getElementById('btnStop').style.display = 'inline-block';
   document.getElementById('btnDownloadZip').disabled = true;
-  document.getElementById('btnDownloadVrew').disabled = true;
   document.getElementById('statTotal').textContent = chunks.length;
   document.getElementById('statDone').textContent = 0;
   document.getElementById('statFail').textContent = 0;
@@ -448,6 +450,12 @@ async function startTTS() {
         addLog(`✓ ${fileNum} 완료 (${(wavBlob.size/1024).toFixed(0)}KB)`, 'ok');
         addResultItem(fileNum, chunkText, wavBlob);
 
+        // 자동 개별 다운로드
+        if (autoSave) {
+          autoDownloadFile(wavBlob, `${fileNum}.wav`);
+          addLog(`💾 ${fileNum}.wav 자동 저장됨`, 'ok');
+        }
+
       } catch (err) {
         const errMsg = err.message;
         addLog(`✗ ${fileNum} 에러 (키${currentKeyIndex+1}): ${errMsg.substring(0, 150)}`, 'err');
@@ -455,7 +463,6 @@ async function startTTS() {
         if (errMsg.includes('429')) {
           keyUsage[currentKeyIndex] = 'dead';
           updateKeyStatus();
-
           if (switchToNextKey('429 한도 도달')) {
             addLog(`⏳ 새 키 안정화 30초 대기...`, 'warn');
             await sleep(30000);
@@ -493,21 +500,18 @@ async function startTTS() {
       addLog(`✗ ${fileNum} 최종 실패`, 'err');
     }
 
-    // 통계 업데이트
     document.getElementById('statDone').textContent = doneCount;
     document.getElementById('statFail').textContent = failCount;
     const pct = Math.round(((doneCount + failCount) / chunks.length) * 100);
     document.getElementById('progressFill').style.width = pct + '%';
     document.getElementById('progressFill').textContent = pct + '%';
 
-    // 다음 청크 전 대기
     if (i < chunks.length - 1 && !isStopped && success) {
       addLog(`⏳ ${delay}초 대기...`, 'info');
       await sleep(delay * 1000);
     }
   }
 
-  // 완료
   stopTimer();
   isRunning = false;
   document.getElementById('btnStart').disabled = false;
@@ -515,8 +519,8 @@ async function startTTS() {
 
   if (doneCount > 0) {
     document.getElementById('btnDownloadZip').disabled = false;
-    document.getElementById('btnDownloadVrew').disabled = false;
     addLog(`\n✅ 완료! 성공: ${doneCount}, 실패: ${failCount}`, 'ok');
+    if (autoSave) addLog(`💾 WAV 파일 ${doneCount}개가 다운로드 폴더에 저장되었습니다.`, 'ok');
   } else {
     addLog(`\n❌ 모든 청크 실패`, 'err');
   }
@@ -530,16 +534,14 @@ function stopTTS() {
 // ─── ZIP 다운로드 ───
 async function downloadZip() {
   const zip = new JSZip();
-  const mediaFolder = zip.folder('media');
   const mapping = {};
 
   for (const [fileNum, data] of Object.entries(audioBlobs)) {
-    mediaFolder.file(`${fileNum}.wav`, data.audio);
+    zip.file(`${fileNum}.wav`, data.audio);
     mapping[fileNum] = { text: data.text, chars: data.text.length };
   }
 
   zip.file('mapping.json', JSON.stringify(mapping, null, 2));
-
   const fullScript = chunks.join('\n\n---\n\n');
   zip.file('script_clean.txt', fullScript);
 
@@ -549,42 +551,6 @@ async function downloadZip() {
   a.download = `gd_tts_output_${new Date().toISOString().slice(0,10)}.zip`;
   a.click();
   addLog('ZIP 다운로드 완료', 'ok');
-}
-
-// ─── VREW 다운로드 ───
-async function downloadVrew() {
-  const zip = new JSZip();
-  const tracks = [];
-  let timeline = 0;
-
-  for (const [fileNum, data] of Object.entries(audioBlobs)) {
-    const durationEstimate = Math.max(data.text.length * 0.15, 5);
-    tracks.push({
-      type: 'audio',
-      file: `media/${fileNum}.wav`,
-      start: timeline,
-      duration: durationEstimate,
-      subtitle: data.text
-    });
-    timeline += durationEstimate;
-    zip.folder('media').file(`${fileNum}.wav`, data.audio);
-  }
-
-  const project = {
-    version: '4.2',
-    title: 'GD TTS Project',
-    resolution: { width: 1920, height: 1080 },
-    tracks: tracks
-  };
-
-  zip.file('project.json', JSON.stringify(project, null, 2));
-
-  const content = await zip.generateAsync({ type: 'blob' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(content);
-  a.download = `gd_project_${new Date().toISOString().slice(0,10)}.vrew`;
-  a.click();
-  addLog('VREW 파일 다운로드 완료', 'ok');
 }
 </script>
 
