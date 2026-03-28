@@ -1,184 +1,451 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GD TTS Studio v7.4 (Gemini 2.5 Pro TTS Edition)</title>
-    <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Malgun Gothic', sans-serif; padding: 20px; }
-        h1 { color: #00bcd4; text-align: center; }
-        .subtitle { text-align: center; color: #aaa; margin-bottom: 20px; }
-        .container { display: flex; flex-direction: column; gap: 15px; max-width: 900px; margin: 0 auto; }
-        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; border-left: 5px solid #00bcd4; }
-        .key-input { width: 100%; padding: 12px; background: #2d2d2d; color: #00bcd4; border: 1px solid #333; font-family: monospace; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
-        .option-group { margin-bottom: 15px; padding: 10px; background: #252525; border-radius: 8px; border: 1px dashed #444; }
-        .option-label { font-weight: bold; color: #ffab00; margin-right: 10px; font-size: 16px; }
-        select { padding: 8px; background: #333; color: #fff; border: 1px solid #555; font-size: 15px; border-radius: 5px; outline: none; width: 60%; }
-        .fixed-options { font-size: 13px; color: #888; margin-top: 5px; }
-        textarea { width: 100%; height: 350px; background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 15px; box-sizing: border-box; font-size: 14px; line-height: 1.8; resize: vertical; margin-top: 5px; }
-        button { background: #00bcd4; color: #000; border: none; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; transition: 0.3s; }
-        button:hover { background: #00838f; color: white; }
-        .log-box { height: 180px; overflow-y: auto; background: #000; padding: 15px; font-family: monospace; border-radius: 8px; border: 1px solid #333; }
-        .log-item { margin-bottom: 5px; font-size: 14px; }
-        .success { color: #4CAF50; } .error { color: #f44336; } .warn { color: #ffeb3b; } .info { color: #00bcd4; }
-        .filtered-text { color: #888; text-decoration: line-through; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GD TTS Studio v4.0</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#1a1a2e; color:#eee; font-family:'Segoe UI',sans-serif; padding:20px; max-width:900px; margin:0 auto; }
+h1 { text-align:center; color:#e94560; margin-bottom:5px; }
+.version { text-align:center; color:#888; font-size:13px; margin-bottom:20px; }
+.section { background:#16213e; border-radius:10px; padding:20px; margin-bottom:15px; }
+.section h2 { color:#e94560; margin-bottom:10px; font-size:16px; }
+label { display:block; color:#aaa; font-size:13px; margin-bottom:5px; }
+input[type=text], textarea { width:100%; background:#0f3460; border:1px solid #333; color:#eee; border-radius:6px; padding:10px; font-size:14px; }
+textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; }
+.btn { padding:12px 24px; border:none; border-radius:6px; font-size:15px; font-weight:bold; cursor:pointer; margin:5px; }
+.btn-start { background:#e94560; color:#fff; }
+.btn-start:hover { background:#c73652; }
+.btn-start:disabled { background:#555; cursor:not-allowed; }
+.btn-download { background:#4ecca3; color:#1a1a2e; }
+.btn-download:hover { background:#3ba884; }
+.btn-download:disabled { background:#555; color:#888; cursor:not-allowed; }
+.btn-stop { background:#ff6b35; color:#fff; }
+.controls { text-align:center; margin:15px 0; }
+.progress-bar { width:100%; height:30px; background:#0f3460; border-radius:15px; overflow:hidden; margin:10px 0; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#e94560,#4ecca3); transition:width 0.5s; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:bold; }
+.stats { display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px; margin:10px 0; }
+.stat-box { background:#0f3460; padding:10px 15px; border-radius:8px; text-align:center; min-width:100px; }
+.stat-num { font-size:22px; font-weight:bold; color:#4ecca3; }
+.stat-label { font-size:11px; color:#888; }
+#log { background:#000; border-radius:6px; padding:10px; height:200px; overflow-y:auto; font-family:'Courier New',monospace; font-size:12px; line-height:1.6; }
+.log-ok { color:#4ecca3; }
+.log-err { color:#e94560; }
+.log-warn { color:#f0a500; }
+.log-info { color:#aaa; }
+.results { margin-top:10px; }
+.result-item { background:#0f3460; border-radius:6px; padding:10px; margin:5px 0; display:flex; justify-content:space-between; align-items:center; }
+.result-item .info { flex:1; }
+.result-item .info .title { font-weight:bold; color:#4ecca3; }
+.result-item .info .preview { color:#888; font-size:12px; margin-top:3px; }
+.result-item audio { margin-left:10px; }
+.settings-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.settings-row > div { flex:1; min-width:200px; }
+</style>
 </head>
 <body>
 
-    <h1>🚀 GD TTS Studio v7.4 (2.5 Pro TTS 전용 모드)</h1>
-    <p class="subtitle">AI Studio와 동일한 세팅! (Voice: Zephyr, Temperature: 1.35 고정)</p>
-    
-    <div class="container">
-        <div class="box">
-            <h3>🔑 1. 구글 API 키</h3>
-            <input type="text" id="singleApiKey" class="key-input" placeholder="AIzaSy...">
-        </div>
+<h1>GD TTS Studio</h1>
+<div class="version">v4.0 — 심플 모드 | Zephyr 고정 | 5000자 분할 | 구연동화 스타일</div>
 
-        <div class="box">
-            <h3>📝 2. 성우 옵션 및 대본 투척</h3>
-            <div class="option-group">
-                <span class="option-label">🎙️ 낭독 스타일(프롬프트 지시):</span>
-                <select id="voiceTone">
-                    <option value="구연동화를 읽는 것처럼, 온화한 목소리로 아주 천천히 또박또박 정겹게 읽어줘.">야담톤 (온화하고 정겨운 구연동화 스타일)</option>
-                    <option value="라디오에서 사연을 읽어주는 스타일로, 대사는 맛깔나게 읽어줘.">라디오사연톤 (맛깔나는 라디오 DJ 스타일)</option>
-                    <option value="시니어들이 잘 알아들을 수 있게 정겨운 목소리로 또박또박 읽어줘.">시니어사연톤 (또박또박하고 정겨운 시니어 맞춤형)</option>
-                </select>
-                <div class="fixed-options">※ 고정 설정 (API 파라미터 적용): Model: gemini-2.5-pro-preview-tts | Voice: Zephyr | Temp: 1.35</div>
-            </div>
-            <textarea id="scriptInput" placeholder="여기에 대본을 통째로 붙여넣으세요. [인트로] 같은 제목은 알아서 뺍니다!"></textarea>
-            <button id="startBtn" onclick="startGeneration()">🔥 2.5 Pro 모델로 완벽한 MP3 뽑아내기!</button>
-        </div>
+<!-- API 키 -->
+<div class="section">
+  <h2>1. API 키</h2>
+  <label>Gemini API Key (유료 Tier 1 권장)</label>
+  <input type="text" id="apiKey" placeholder="AIza...">
+</div>
 
-        <div class="box">
-            <h3>📊 진행 로그</h3>
-            <div id="logBox" class="log-box"></div>
-        </div>
+<!-- 대본 입력 -->
+<div class="section">
+  <h2>2. 대본 입력</h2>
+  <label>대본을 그대로 붙여넣으세요. [ ], 【 】, ( ) 안의 내용은 자동으로 제거됩니다.</label>
+  <textarea id="scriptInput" placeholder="여기에 대본 전체를 붙여넣으세요..."></textarea>
+  <div style="margin-top:8px; color:#888; font-size:12px;">
+    <span id="charCount">0</span>자 | 예상 청크: <span id="chunkEstimate">0</span>개 | 예상 소요: <span id="timeEstimate">0</span>분
+  </div>
+</div>
+
+<!-- 설정 -->
+<div class="section">
+  <h2>3. 설정</h2>
+  <div class="settings-row">
+    <div>
+      <label>분할 단위 (자)</label>
+      <input type="text" id="chunkSize" value="5000">
     </div>
+    <div>
+      <label>요청 간격 (초)</label>
+      <input type="text" id="requestDelay" value="25">
+    </div>
+    <div>
+      <label>Temperature</label>
+      <input type="text" id="temperature" value="1.35">
+    </div>
+  </div>
+</div>
 
-    <script>
-        let isRunning = false;
+<!-- 실행 -->
+<div class="section">
+  <h2>4. TTS 생성</h2>
+  <div class="controls">
+    <button class="btn btn-start" id="btnStart" onclick="startTTS()">TTS 생성 시작</button>
+    <button class="btn btn-stop" id="btnStop" onclick="stopTTS()" style="display:none;">중지</button>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%;">0%</div></div>
+  <div class="stats">
+    <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-label">전체</div></div>
+    <div class="stat-box"><div class="stat-num" id="statDone">0</div><div class="stat-label">완료</div></div>
+    <div class="stat-box"><div class="stat-num" id="statFail">0</div><div class="stat-label">실패</div></div>
+    <div class="stat-box"><div class="stat-num" id="statTime">0:00</div><div class="stat-label">경과</div></div>
+  </div>
+  <div id="log"></div>
+</div>
 
-        function addLog(msg, type="info") {
-            const logBox = document.getElementById('logBox');
-            logBox.innerHTML += `<div class="log-item ${type}">${msg}</div>`;
-            logBox.scrollTop = logBox.scrollHeight;
+<!-- 결과 & 다운로드 -->
+<div class="section">
+  <h2>5. 결과</h2>
+  <div class="controls">
+    <button class="btn btn-download" id="btnDownloadZip" onclick="downloadZip()" disabled>ZIP 다운로드 (MP3 + 대본)</button>
+    <button class="btn btn-download" id="btnDownloadVrew" onclick="downloadVrew()" disabled>VREW 파일 다운로드</button>
+  </div>
+  <div class="results" id="results"></div>
+</div>
+
+<script>
+// ─── 전역 변수 ───
+let chunks = [];
+let audioBlobs = {};
+let isRunning = false;
+let isStopped = false;
+let startTime = 0;
+let timerInterval = null;
+
+const VOICE = 'Zephyr';
+const STYLE = '구연동화를 읽는 것처럼, 온화한 목소리로 아주 천천히 또박또박 정겹게 읽어줘. 문장과 문장 사이에 2초간 충분히 쉬고 다음 문장을 읽어줘.';
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent';
+
+// ─── 유틸 ───
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function addLog(msg, type='info') {
+  const log = document.getElementById('log');
+  const line = document.createElement('div');
+  line.className = 'log-' + type;
+  const now = new Date().toLocaleTimeString('ko-KR');
+  line.textContent = `[${now}] ${msg}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ─── 대본 정리 ───
+function cleanScript(text) {
+  // [ ], 【 】, ( ) 안의 내용 제거
+  text = text.replace(/\[.*?\]/g, '');
+  text = text.replace(/【.*?】/g, '');
+  text = text.replace(/\(.*?\)/g, '');
+  // 빈 줄 정리
+  text = text.replace(/\n{3,}/g, '\n\n');
+  text = text.trim();
+  return text;
+}
+
+// ─── 텍스트 분할 ───
+function splitText(text, maxLen) {
+  const result = [];
+  const sentences = text.split(/(?<=[.!?。다요죠니다])\s*/);
+  let current = '';
+
+  for (const sent of sentences) {
+    if (sent.trim() === '') continue;
+    if ((current + ' ' + sent).length > maxLen && current.length > 0) {
+      result.push(current.trim());
+      current = sent;
+    } else {
+      current = current ? current + ' ' + sent : sent;
+    }
+  }
+  if (current.trim()) result.push(current.trim());
+  return result;
+}
+
+// ─── 글자수 표시 업데이트 ───
+document.getElementById('scriptInput').addEventListener('input', function() {
+  const clean = cleanScript(this.value);
+  const len = clean.length;
+  const chunkSize = parseInt(document.getElementById('chunkSize').value) || 5000;
+  const delay = parseInt(document.getElementById('requestDelay').value) || 25;
+  const numChunks = len > 0 ? Math.ceil(len / chunkSize) : 0;
+  const minutes = Math.ceil(numChunks * delay / 60);
+  document.getElementById('charCount').textContent = len;
+  document.getElementById('chunkEstimate').textContent = numChunks;
+  document.getElementById('timeEstimate').textContent = minutes;
+});
+
+// ─── WAV 변환 ───
+function pcmToWav(pcmData, sampleRate=24000, numChannels=1, bitsPerSample=16) {
+  const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+  const blockAlign = numChannels * (bitsPerSample / 8);
+  const dataSize = pcmData.byteLength;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+
+  function writeStr(offset, str) { for(let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); }
+
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  writeStr(36, 'data');
+  view.setUint32(40, dataSize, true);
+  new Uint8Array(buffer, 44).set(new Uint8Array(pcmData));
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+// ─── TTS API 호출 ───
+async function callTTS(text, apiKey, temperature) {
+  const prompt = `${STYLE}\n\n${text}`;
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseModalities: ["AUDIO"],
+      temperature: parseFloat(temperature),
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName: VOICE }
         }
+      }
+    }
+  };
 
-        async function startGeneration() {
-            if (isRunning) return;
-            const apiKey = document.getElementById('singleApiKey').value.trim();
-            if (!apiKey) return alert("API 키를 넣어주세요!");
-            
-            const rawText = document.getElementById('scriptInput').value;
-            if (!rawText.trim()) return alert("대본을 입력하세요!");
+  const response = await fetch(`${API_URL}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
 
-            const selectedTone = document.getElementById('voiceTone').value;
-            const selectedToneName = document.getElementById('voiceTone').options[document.getElementById('voiceTone').selectedIndex].text;
+  if (!response.ok) {
+    let errMsg = '';
+    try { const errData = await response.json(); errMsg = JSON.stringify(errData); }
+    catch(e) { errMsg = await response.text().catch(() => ''); }
+    throw new Error(`API ${response.status}: ${errMsg.substring(0, 300)}`);
+  }
 
-            document.getElementById('logBox').innerHTML = ''; 
-            addLog(`🚀 [${selectedToneName}] 스타일로 2.5 Pro TTS 모델을 호출합니다.`, 'warn');
-            
-            isRunning = true;
-            document.getElementById('startBtn').innerText = "⏳ 2.5 Pro 엔진 가동 중... (기다려주세요)";
-            document.getElementById('startBtn').style.background = "#555";
+  const data = await response.json();
+  const audioData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  if (!audioData) throw new Error('응답에 오디오 데이터 없음');
 
-            // 대본 정리 (제목 빼기 & 2초 무음 넣기)
-            const lines = rawText.split('\n').map(l => l.trim()).filter(l => l !== '');
-            let cleanScript = "";
-            let removedCount = 0;
+  const pcmBytes = Uint8Array.from(atob(audioData), c => c.charCodeAt(0));
+  return pcmToWav(pcmBytes.buffer);
+}
 
-            for (const line of lines) {
-                if (line.match(/^\[.*\]$/) || line.match(/^【.*】$/)) {
-                    addLog(`🗑️ 제외됨: <span class="filtered-text">${line}</span>`, 'info');
-                    removedCount++;
-                    continue; 
-                }
-                cleanScript += line + "\n[2초간 완전한 침묵]\n"; 
-            }
-            addLog(`✅ 총 ${removedCount}개의 제목을 제거했습니다.`, 'success');
+// ─── 타이머 ───
+function startTimer() {
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    document.getElementById('statTime').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  }, 1000);
+}
+function stopTimer() { if (timerInterval) clearInterval(timerInterval); }
 
-            const masterPrompt = `스타일 지시: ${selectedTone}\n\n아래 대본을 읽어주세요. 각 문장 끝에 적힌 '[2초간 완전한 침묵]' 지시를 반드시 지켜서 2초 동안 소리를 내지 말고 쉬어야 합니다.\n\n대본:\n"${cleanScript}"`;
+// ─── 메인 실행 ───
+async function startTTS() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('API 키를 입력하세요.'); return; }
 
-            try {
-                addLog(`📡 구글 2.5 Pro 전용 모델에 요청을 전송합니다! (Voice: Zephyr, Temp: 1.35)`, 'warn');
-                
-                // ★ 핵심: 모델 주소를 2.5 Pro TTS 전용으로 변경! ★
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-tts:generateContent?key=${apiKey}`;
-                
-                const requestBody = {
-                    contents: [{ parts: [{ text: masterPrompt }] }],
-                    generationConfig: { 
-                        temperature: 1.35, // 캡처 화면에서 설정하신 값
-                        // ★ 2.5 Pro TTS 모델 전용 오디오 옵션 세팅! ★
-                        speechConfig: {
-                            voiceConfig: {
-                                prebuiltVoiceConfig: {
-                                    voiceName: "Zephyr" // 캡처 화면에서 고르신 목소리
-                                }
-                            }
-                        }
-                    }
-                };
+  const rawScript = document.getElementById('scriptInput').value;
+  if (!rawScript.trim()) { alert('대본을 입력하세요.'); return; }
 
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
-                });
+  const chunkSize = parseInt(document.getElementById('chunkSize').value) || 5000;
+  const delay = parseInt(document.getElementById('requestDelay').value) || 25;
+  const temperature = document.getElementById('temperature').value || '1.35';
 
-                if (response.status === 400) {
-                    const errorData = await response.text();
-                    throw new Error(`400 에러: ${errorData.substring(0, 100)}`);
-                }
-                if (response.status === 429) {
-                    throw new Error("429 에러! 계정 한도가 초과되었습니다. 다른 키로 교체해주세요.");
-                }
-                if (!response.ok) throw new Error(`API Error ${response.status}`);
+  // 대본 정리 & 분할
+  const cleanedScript = cleanScript(rawScript);
+  chunks = splitText(cleanedScript, chunkSize);
+  audioBlobs = {};
 
-                const data = await response.json();
-                
-                // 2.5 Pro TTS 모델의 응답 구조 파싱 (일반 모델과 다를 수 있음)
-                let base64Audio = null;
-                
-                // 응답에서 inlineData(오디오) 찾기
-                const parts = data.candidates?.[0]?.content?.parts;
-                if (parts) {
-                    for (let part of parts) {
-                        if (part.inlineData && part.inlineData.mimeType.includes("audio")) {
-                            base64Audio = part.inlineData.data;
-                            break;
-                        }
-                    }
-                }
+  if (chunks.length === 0) { alert('정리 후 대본이 비어있습니다.'); return; }
 
-                if (base64Audio) {
-                    const byteCharacters = atob(base64Audio);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    const mp3Blob = new Blob([new Uint8Array(byteNumbers)], { type: 'audio/mp3' }); // 기본 출력은 보통 wav나 mp3 형태
+  addLog(`대본 정리 완료: ${cleanedScript.length}자 → ${chunks.length}개 청크`, 'ok');
+  chunks.forEach((c, i) => addLog(`  청크 ${i+1}: ${c.length}자`, 'info'));
 
-                    addLog(`🎉 드디어 성공했습니다! Zephyr 목소리의 오디오를 다운로드합니다!`, 'success');
-                    
-                    const link = document.createElement("a");
-                    link.href = URL.createObjectURL(mp3Blob);
-                    link.download = `GD_Story_Zephyr.mp3`; // MP3로 저장 유도
-                    link.click();
-                    
-                    addLog(`💡 다음 단계: 다운받은 MP3를 VREW에 넣고 [무음 구간 줄이기]를 실행하세요!`, 'info');
+  // UI 업데이트
+  isRunning = true;
+  isStopped = false;
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnStop').style.display = 'inline-block';
+  document.getElementById('btnDownloadZip').disabled = true;
+  document.getElementById('btnDownloadVrew').disabled = true;
+  document.getElementById('statTotal').textContent = chunks.length;
+  document.getElementById('statDone').textContent = 0;
+  document.getElementById('statFail').textContent = 0;
+  document.getElementById('results').innerHTML = '';
 
-                } else {
-                    throw new Error('구글이 오디오 데이터를 주지 않았습니다. (텍스트만 옴)');
-                }
+  startTimer();
 
-            } catch (e) {
-                addLog(`❌ [실패] ${e.message}`, 'error');
-            } finally {
-                isRunning = false;
-                document.getElementById('startBtn').innerText = "🔥 2.5 Pro 모델로 완벽한 MP3 뽑아내기!";
-                document.getElementById('startBtn').style.background = "#00bcd4";
-            }
+  let doneCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < chunks.length; i++) {
+    if (isStopped) { addLog('사용자가 중지했습니다.', 'warn'); break; }
+
+    const fileNum = String(i + 1).padStart(3, '0');
+    const chunkText = chunks[i];
+    const preview = chunkText.substring(0, 50) + '...';
+
+    addLog(`[${fileNum}/${String(chunks.length).padStart(3,'0')}] 생성 중... (${chunkText.length}자)`, 'info');
+
+    let success = false;
+    for (let retry = 0; retry < 3; retry++) {
+      try {
+        const wavBlob = await callTTS(chunkText, apiKey, temperature);
+        audioBlobs[fileNum] = { audio: wavBlob, text: chunkText };
+        doneCount++;
+        success = true;
+
+        addLog(`✓ ${fileNum} 완료 (${(wavBlob.size/1024).toFixed(0)}KB)`, 'ok');
+
+        // 결과 목록에 추가
+        addResultItem(fileNum, chunkText, wavBlob);
+        break;
+      } catch (err) {
+        addLog(`✗ ${fileNum} 에러: ${err.message}`, 'err');
+        if (retry < 2) {
+          const waitSec = (retry + 1) * 15;
+          addLog(`↻ ${waitSec}초 후 재시도... [재시도${retry + 1}]`, 'warn');
+          await sleep(waitSec * 1000);
+        } else {
+          failCount++;
+          addLog(`✗ ${fileNum} 최종 실패`, 'err');
         }
-    </script>
+      }
+    }
+
+    // 통계 업데이트
+    document.getElementById('statDone').textContent = doneCount;
+    document.getElementById('statFail').textContent = failCount;
+    const pct = Math.round(((doneCount + failCount) / chunks.length) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressFill').textContent = pct + '%';
+
+    // 다음 청크 전 대기
+    if (i < chunks.length - 1 && !isStopped) {
+      addLog(`⏳ ${delay}초 대기...`, 'info');
+      await sleep(delay * 1000);
+    }
+  }
+
+  // 완료
+  stopTimer();
+  isRunning = false;
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').style.display = 'none';
+
+  if (doneCount > 0) {
+    document.getElementById('btnDownloadZip').disabled = false;
+    document.getElementById('btnDownloadVrew').disabled = false;
+    addLog(`\n✅ 완료! 성공: ${doneCount}, 실패: ${failCount}`, 'ok');
+  } else {
+    addLog(`\n❌ 모든 청크 실패`, 'err');
+  }
+}
+
+function stopTTS() {
+  isStopped = true;
+  addLog('중지 요청...', 'warn');
+}
+
+// ─── 결과 항목 추가 ───
+function addResultItem(fileNum, text, blob) {
+  const div = document.createElement('div');
+  div.className = 'result-item';
+  const url = URL.createObjectURL(blob);
+  div.innerHTML = `
+    <div class="info">
+      <div class="title">${fileNum}.mp3 (${text.length}자)</div>
+      <div class="preview">${text.substring(0, 80)}...</div>
+    </div>
+    <audio controls src="${url}" style="height:35px;"></audio>
+  `;
+  document.getElementById('results').appendChild(div);
+}
+
+// ─── ZIP 다운로드 ───
+async function downloadZip() {
+  const zip = new JSZip();
+  const mediaFolder = zip.folder('media');
+  const mapping = {};
+
+  for (const [fileNum, data] of Object.entries(audioBlobs)) {
+    mediaFolder.file(`${fileNum}.wav`, data.audio);
+    mapping[fileNum] = { text: data.text, chars: data.text.length };
+  }
+
+  zip.file('mapping.json', JSON.stringify(mapping, null, 2));
+
+  // 정리된 전체 대본도 포함
+  const fullScript = chunks.join('\n\n---\n\n');
+  zip.file('script_clean.txt', fullScript);
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(content);
+  a.download = `gd_tts_output_${new Date().toISOString().slice(0,10)}.zip`;
+  a.click();
+  addLog('ZIP 다운로드 완료', 'ok');
+}
+
+// ─── VREW 다운로드 ───
+async function downloadVrew() {
+  const zip = new JSZip();
+
+  // project.json
+  const tracks = [];
+  let timeline = 0;
+
+  for (const [fileNum, data] of Object.entries(audioBlobs)) {
+    const durationEstimate = Math.max(data.text.length * 0.15, 5); // 대략적 길이 추정
+    tracks.push({
+      type: 'audio',
+      file: `media/${fileNum}.wav`,
+      start: timeline,
+      duration: durationEstimate,
+      subtitle: data.text
+    });
+    timeline += durationEstimate;
+
+    zip.folder('media').file(`${fileNum}.wav`, data.audio);
+  }
+
+  const project = {
+    version: '4.0',
+    title: 'GD TTS Project',
+    resolution: { width: 1920, height: 1080 },
+    tracks: tracks
+  };
+
+  zip.file('project.json', JSON.stringify(project, null, 2));
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(content);
+  a.download = `gd_project_${new Date().toISOString().slice(0,10)}.vrew`;
+  a.click();
+  addLog('VREW 파일 다운로드 완료', 'ok');
+}
+</script>
+
 </body>
 </html>
