@@ -3,47 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GD TTS Studio v5.1 (Azure Pro Director)</title>
+    <title>GD TTS Studio v6.0 (Zombie Relay Edition)</title>
+    <!-- VREW ZIP 변환용 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        body { background-color: #1e1e1e; color: #f0f0f0; font-family: 'Malgun Gothic', sans-serif; padding: 20px; }
-        h1 { color: #0078d4; }
-        .container { display: flex; gap: 20px; }
-        .box { flex: 1; background: #2d2d2d; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; }
-        textarea { flex: 1; width: 100%; min-height: 400px; background: #1e1e1e; color: #fff; border: 1px solid #444; padding: 10px; box-sizing: border-box; font-size: 14px; line-height: 1.5; }
-        button { background: #0078d4; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 15px; }
-        button:hover { background: #005a9e; }
-        .log-box { flex: 1; overflow-y: auto; background: #000; padding: 10px; font-family: monospace; border-radius: 4px; border: 1px solid #444; }
-        .log-item { margin-bottom: 5px; padding: 3px 0; border-bottom: 1px dashed #333; }
-        .success { color: #4CAF50; }
-        .error { color: #f44336; }
-        .info { color: #2196F3; }
-        .char-tag { color: #ffeb3b; font-weight: bold; }
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Malgun Gothic', sans-serif; padding: 20px; }
+        h1 { color: #bb86fc; text-align: center; }
+        .container { display: flex; flex-direction: column; gap: 15px; max-width: 1200px; margin: 0 auto; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .key-input { width: 100%; padding: 10px; background: #2d2d2d; color: #03dac6; border: 1px solid #333; margin-bottom: 10px; font-family: monospace; }
+        textarea { width: 100%; height: 350px; background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 15px; box-sizing: border-box; font-size: 14px; line-height: 1.6; resize: vertical; }
+        button { background: #bb86fc; color: #000; border: none; padding: 15px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.3s; }
+        button:hover { background: #3700b3; color: white; }
+        .status-board { display: flex; gap: 10px; margin-bottom: 10px; }
+        .badge { background: #333; padding: 5px 10px; border-radius: 5px; font-size: 12px; }
+        .badge.active { background: #03dac6; color: #000; }
+        .log-box { height: 300px; overflow-y: auto; background: #000; padding: 15px; font-family: monospace; border-radius: 8px; border: 1px solid #333; }
+        .log-item { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dotted #333; }
+        .success { color: #03dac6; } .error { color: #cf6679; } .warn { color: #ffb300; } .info { color: #bb86fc; }
+        .char-tag { color: #ffeb3b; }
     </style>
 </head>
 <body>
 
-    <h1>🎬 GD TTS Studio v5.1 (자동 성우 캐스팅 모드)</h1>
-    <p>GD님의 원본 대본을 그대로 넣으세요! 나이/성별/감정 태그를 분석해 애저 SSML로 자동 변환합니다.</p>
-
+    <h1>🧟‍♂️ GD TTS Studio v6.0 (구글 무한 좀비 릴레이)</h1>
+    
     <div class="container">
-        <!-- 1. 대본 입력 영역 -->
+        <!-- API 키 입력 영역 -->
         <div class="box">
-            <h3>📝 원본 사연 대본 (캐릭터 세팅 + 본문)</h3>
-            <textarea id="scriptInput" placeholder="여기에 대본을 통째로 복사해서 붙여넣으세요!"></textarea>
-            <button onclick="startAzureGeneration()">⚡ 완벽 감정 TTS 생성 및 VREW ZIP 다운로드</button>
+            <h3>🔑 구글 제미나이 API 키 (콤마로 구분해서 6개 꽉꽉 채워 넣으세요!)</h3>
+            <input type="text" id="apiKeysInput" class="key-input" placeholder="AIzaSy..., AIzaSy..., AIzaSy... (반드시 콤마(,)로 구분)">
+            <div id="keyStatus" class="status-board"></div>
         </div>
 
-        <!-- 2. 진행 상황 및 로그 영역 -->
+        <!-- 대본 입력 영역 -->
         <div class="box">
-            <h3>📊 실시간 디렉팅 및 생성 로그</h3>
+            <h3>📝 원본 사연 대본 (캐릭터 세팅 + 본문)</h3>
+            <textarea id="scriptInput" placeholder="[캐릭터/윤소아/성별:여/나이:20세/톤:맑고 가녀린...]&#10;========== 본문 ==========&#10;[윤소아/흐느끼며] 서방님..."></textarea>
+            <button onclick="startZombieRelay()">🚀 3만 자 릴레이 TTS 생성 시작 (VREW 파일 자동 생성)</button>
+        </div>
+
+        <!-- 로그 영역 -->
+        <div class="box">
+            <h3>📊 좀비 릴레이 실시간 중계</h3>
             <div id="logBox" class="log-box"></div>
         </div>
     </div>
 
     <script>
-        const AZURE_API_KEY = "FM6xOkd4Ri2eWKmUqABDGbqAZK3T1CP5eyIIUIN5CjzbhKZ6Vp8jJQQJ99CCACYeBjFXJ3w3AAAYACOGBd2v";
-        const AZURE_REGION = "eastus";
+        // --------------------------------------------------------
+        // 1. 좀비 릴레이 핵심 설정
+        // --------------------------------------------------------
+        let apiKeys = [];
+        let currentKeyIndex = 0;
+        const REQUEST_DELAY = 8500; // 구글 무료 티어 방어막 회피용 (8.5초)
+        const MAX_RETRY = 3;
+
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
         function addLog(msg, type="info") {
             const logBox = document.getElementById('logBox');
@@ -51,57 +67,45 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-        // ★ 핵심 1: 애저 SSML 생성 엔진 (톤/속도 조절 포함) ★
-        async function fetchAzureTTS(text, config, emotionTag) {
-            const endpoint = `https://${AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`;
-            
-            let pitch = config.pitch;
-            let rate = config.rate;
-
-            // [감정 지시문]에 따른 실시간 톤 보정 (GD님 대본 맞춤형!)
-            if (emotionTag.includes('흐느끼며') || emotionTag.includes('울먹이는')) {
-                rate = "-15%"; pitch = "-10%"; // 슬프면 느리고 낮게
-            } else if (emotionTag.includes('다급하고') || emotionTag.includes('거칠고')) {
-                rate = "+15%"; // 다급하면 빠르게
-            } else if (emotionTag.includes('해맑게') || emotionTag.includes('맑은')) {
-                pitch = "+10%"; // 해맑으면 톤을 높게
-            }
-
-            const ssml = `
-                <speak version='1.0' xml:lang='ko-KR'>
-                    <voice name='${config.voiceId}'>
-                        <prosody pitch='${pitch}' rate='${rate}'>
-                            ${text}
-                        </prosody>
-                    </voice>
-                </speak>
-            `.trim();
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Ocp-Apim-Subscription-Key': AZURE_API_KEY,
-                    'Content-Type': 'application/ssml+xml',
-                    'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
-                    'User-Agent': 'GDTTS_Studio'
-                },
-                body: ssml
+        // 키 상태 UI 업데이트
+        function updateKeyUI() {
+            const board = document.getElementById('keyStatus');
+            board.innerHTML = '';
+            apiKeys.forEach((key, idx) => {
+                const badge = document.createElement('span');
+                badge.className = `badge ${idx === currentKeyIndex ? 'active' : ''}`;
+                badge.innerText = `Key ${idx + 1} ${idx === currentKeyIndex ? '(달리는 중🏃)' : '(대기 중😴)'}`;
+                board.appendChild(badge);
             });
-
-            if (!response.ok) throw new Error(`API 에러: ${response.status}`);
-            return await response.blob();
         }
 
-        // ★ 핵심 2: GD님 전용 대본 파서 (분석기) ★
+        // ★ 핵심: 429 맞고 쓰러지면 다음 키로 바통 터치! ★
+        async function switchToNextKey(reason) {
+            addLog(`⚠️ [Key ${currentKeyIndex + 1} 전사] 원인: ${reason}`, 'warn');
+            currentKeyIndex++;
+            
+            // 6개 다 쓰러졌으면? 1분간 명상(딥슬립) 후 1번 키 예도토전생!
+            if (currentKeyIndex >= apiKeys.length) {
+                addLog(`💀 모든 좀비(API 키)가 전멸했습니다! 60초간 딥슬립 후 부활합니다... 💤`, 'error');
+                await sleep(60000); 
+                currentKeyIndex = 0;
+                addLog(`🧟‍♂️ 좀비 군단 부활! Key 1번부터 다시 달립니다!`, 'info');
+            } else {
+                addLog(`🏃‍♂️ 바통 터치 완료! Key ${currentKeyIndex + 1} 출격!`, 'info');
+            }
+            updateKeyUI();
+        }
+
+
+        // --------------------------------------------------------
+        // 2. 대본 완벽 파서 (캐릭터 설정 & 감정 추출)
+        // --------------------------------------------------------
         function parseScript(rawText) {
             const lines = rawText.split('\n').map(l => l.trim()).filter(l => l !== '');
             let isBody = false;
-            const charConfigMap = {};
+            const characters = {};
             const scriptLines = [];
 
-            // 캐릭터 분석기
             for (const line of lines) {
                 if (line.includes('========== 본문 ==========')) {
                     isBody = true;
@@ -109,109 +113,150 @@
                 }
 
                 if (!isBody) {
-                    // [캐릭터/이름/성별/나이/톤] 분석
-                    const match = line.match(/\[캐릭터\/([^\/]+)\/성별:([남여])\/나이:([^/\]]+)/);
+                    const match = line.match(/\[캐릭터\/([^\/]+)\/성별:([남여])\/나이:([^/\]]+)\/톤:(.*?)\]/);
                     if (match) {
-                        const name = match[1].trim();
-                        const gender = match[2];
-                        const ageStr = match[3];
-
-                        // 기본값 세팅
-                        let voiceId = 'ko-KR-SunHiNeural';
-                        let pitch = "0%"; let rate = "0%";
-
-                        if (name.includes('나레이션') || name.includes('내레이션')) {
-                            voiceId = 'ko-KR-SeoHyeonNeural'; // 차분한 내레이션 전용
-                        } else if (gender === '여') {
-                            if (ageStr.includes('60') || ageStr.includes('70') || ageStr.includes('할머니')) {
-                                voiceId = 'ko-KR-SunHiNeural'; pitch = "-15%"; rate = "-10%"; // 할머니 톤
-                            } else if (ageStr.includes('40') || ageStr.includes('50')) {
-                                voiceId = 'ko-KR-SeoHyeonNeural'; pitch = "-5%"; // 중년 여성
-                            } else {
-                                voiceId = 'ko-KR-JiMinNeural'; pitch = "+5%"; // 젊은 여성 (윤소아)
-                            }
-                        } else if (gender === '남') {
-                            if (ageStr.includes('12세') || ageStr.includes('아이')) {
-                                voiceId = 'ko-KR-YuJinNeural'; pitch = "+15%"; // 소년 (윤 덕문)
-                            } else if (ageStr.includes('60') || ageStr.includes('70') || ageStr.includes('노인')) {
-                                voiceId = 'ko-KR-BongJinNeural'; pitch = "-20%"; rate = "-15%"; // 할아버지 (강 노인, 윤 진사)
-                            } else if (ageStr.includes('40') || ageStr.includes('50')) {
-                                voiceId = 'ko-KR-GookMinNeural'; pitch = "-5%"; // 중년 남성 (허 군수, 약재상)
-                            } else {
-                                voiceId = 'ko-KR-InJoonNeural'; pitch = "-10%"; // 젊은 사내 (심재언)
-                            }
-                        }
-                        charConfigMap[name] = { voiceId, pitch, rate };
-                        addLog(`🎭 성우 배정 완료: <span class="char-tag">[${name}]</span> -> ${voiceId} (톤:${pitch}, 속도:${rate})`);
+                        characters[match[1].trim()] = {
+                            gender: match[2],
+                            age: match[3],
+                            tone: match[4].trim()
+                        };
                     }
                 } else {
-                    // 본문 분석: [이름/감정] "대사"
                     const match = line.match(/^\[(.*?)\/(.*?)\]\s*(.*)$/);
                     if (match) {
-                        const name = match[1].trim();
-                        const emotion = match[2].trim();
                         let text = match[3].trim();
-                        
-                        // 큰따옴표 제거
-                        if (text.startsWith('"') && text.endsWith('"')) {
-                            text = text.substring(1, text.length - 1);
-                        }
-                        scriptLines.push({ name, emotion, text, originalLine: line });
+                        if (text.startsWith('"') && text.endsWith('"')) text = text.substring(1, text.length - 1);
+                        scriptLines.push({ name: match[1].trim(), emotion: match[2].trim(), text });
                     } else if (!line.startsWith('======') && !line.startsWith('[')) {
-                        // 태그 없는 일반 텍스트는 내레이션으로 처리
-                        scriptLines.push({ name: '나레이션', emotion: '', text: line, originalLine: line });
+                        scriptLines.push({ name: '나레이션', emotion: '차분하게', text: line });
                     }
                 }
             }
-            return { charConfigMap, scriptLines };
+            return { characters, scriptLines };
         }
 
-        // 전체 작업 시작 버튼 눌렀을 때!
-        async function startAzureGeneration() {
-            const rawText = document.getElementById('scriptInput').value;
-            if (!rawText.trim()) return alert("대본을 입력해주세요!");
 
-            document.getElementById('logBox').innerHTML = ''; // 로그 초기화
-            addLog(`🚀 대본 분석을 시작합니다...`, 'info');
+        // --------------------------------------------------------
+        // 3. 구글 제미나이 1.5 Flash (안정적인 최신 모델) 호출기
+        // --------------------------------------------------------
+        // 참고: 2.5 프리뷰는 불안정해서 1.5 Flash 최신 버전으로 돌립니다!
+        async function fetchGeminiAudio(text, charInfo, emotion) {
+            let retryCount = 0;
 
-            const { charConfigMap, scriptLines } = parseScript(rawText);
-            
-            if (scriptLines.length === 0) {
-                return addLog(`[오류] 본문 대사를 찾을 수 없습니다. 형식을 확인해주세요.`, 'error');
-            }
+            // 프롬프트 엔지니어링의 정수 (연기 지시)
+            const prompt = `
+당신은 최고의 라디오 드라마 성우입니다.
+역할: ${charInfo ? `${charInfo.age} ${charInfo.gender}, 톤: ${charInfo.tone}` : '차분한 내레이터'}
+현재 감정/상황: [${emotion}]
+대사: "${text}"
 
-            addLog(`✅ 총 ${scriptLines.length}개의 대사/내레이션 추출 완료. 녹음 들어갑니다! 🎬`, 'success');
+위 대사를 설정된 역할과 감정에 완벽하게 몰입하여, 한국어로 자연스럽게 연기하듯 읽어주세요. 
+잡음 없이 오직 목소리만 출력해야 합니다.
+`;
 
-            const zip = new JSZip(); 
-
-            for (let i = 0; i < scriptLines.length; i++) {
-                const lineData = scriptLines[i];
-                
-                // 설정된 캐릭터 정보가 없으면 내레이션(기본값) 적용
-                const config = charConfigMap[lineData.name] || { voiceId: 'ko-KR-SeoHyeonNeural', pitch: "0%", rate: "0%" };
+            while (retryCount < MAX_RETRY) {
+                const currentKey = apiKeys[currentKeyIndex];
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${currentKey}`;
 
                 try {
-                    // 애저 API에 쏘기! (대사 텍스트, 캐릭터 성우 정보, 감정 지시문 전달)
-                    const mp3Blob = await fetchAzureTTS(lineData.text, config, lineData.emotion);
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { 
+                                // 제미나이가 오디오를 뱉도록 설정 (1.5 Flash부터 지원)
+                                responseMimeType: "audio/mp3" 
+                            }
+                        })
+                    });
+
+                    if (response.status === 429) {
+                        await switchToNextKey('429 Rate Limit (한도 초과)');
+                        continue; // 바통 터치하고 반복문 처음으로 돌아가서 재시도!
+                    }
+
+                    if (!response.ok) throw new Error(`API Error ${response.status}`);
+
+                    const data = await response.json();
                     
-                    const fileName = `${String(i + 1).padStart(3, '0')}.mp3`;
+                    // 제미나이가 오디오 데이터를 base64로 줬을 경우 변환
+                    if (data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data) {
+                        const base64Audio = data.candidates[0].content.parts[0].inlineData.data;
+                        const byteCharacters = atob(base64Audio);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        return new Blob([byteArray], { type: 'audio/mp3' });
+                    } else {
+                        throw new Error('오디오 데이터를 받지 못함 (텍스트만 옴)');
+                    }
+
+                } catch (e) {
+                    addLog(`[에러] ${e.message}. 5초 후 재시도... (${retryCount + 1}/${MAX_RETRY})`, 'error');
+                    retryCount++;
+                    await sleep(5000);
+                }
+            }
+            throw new Error('최대 재시도 횟수 초과');
+        }
+
+
+        // --------------------------------------------------------
+        // 4. 대망의 메인 컨트롤러 (VREW 파일 묶기)
+        // --------------------------------------------------------
+        async function startZombieRelay() {
+            const rawKeys = document.getElementById('apiKeysInput').value;
+            apiKeys = rawKeys.split(',').map(k => k.trim()).filter(k => k.length > 10);
+            
+            if (apiKeys.length === 0) return alert("API 키를 최소 1개 이상 입력해주세요!");
+            if (apiKeys.length < 6) alert(`현재 입력된 키는 ${apiKeys.length}개입니다. 6개를 꽉 채우는 걸 권장합니다!`);
+            
+            currentKeyIndex = 0;
+            updateKeyUI();
+
+            const rawText = document.getElementById('scriptInput').value;
+            document.getElementById('logBox').innerHTML = ''; 
+            
+            const { characters, scriptLines } = parseScript(rawText);
+            if (scriptLines.length === 0) return alert("대본 형식을 확인해주세요!");
+
+            addLog(`🚀 3만 자 정복 작전 개시! 총 ${scriptLines.length}개의 대사가 추출되었습니다.`, 'success');
+            
+            const zip = new JSZip();
+
+            for (let i = 0; i < scriptLines.length; i++) {
+                const line = scriptLines[i];
+                const charInfo = characters[line.name];
+
+                addLog(`🎬 [${i+1}/${scriptLines.length}] 녹음 중: <span class="char-tag">[${line.name}/${line.emotion}]</span>`, 'info');
+
+                try {
+                    const mp3Blob = await fetchGeminiAudio(line.text, charInfo, line.emotion);
+                    const fileName = `${String(i + 1).padStart(4, '0')}.mp3`;
                     zip.file(fileName, mp3Blob);
                     
-                    addLog(`[녹음 완료] ${fileName} <span class="char-tag">[${lineData.name}/${lineData.emotion}]</span>`, 'success');
+                    addLog(`✅ [성공] ${fileName} 저장 완료!`, 'success');
 
-                    await sleep(100); // 0.1초 쿨타임 (애저 속도)
+                    // 구글 눈치채지 못하게 8.5초 딜레이 (이때 유튜브 보면서 쉬시면 됩니다)
+                    if (i < scriptLines.length - 1) {
+                        addLog(`⏳ 구글 방어막 회피 중... 8.5초 대기...`, 'warn');
+                        await sleep(REQUEST_DELAY); 
+                    }
 
-                } catch (error) {
-                    addLog(`[실패] ${i+1}번째 대사 에러: ${error.message}`, 'error');
+                } catch (e) {
+                    addLog(`❌ [최종 실패] ${i+1}번째 대사를 건너뜁니다: ${e.message}`, 'error');
                 }
             }
 
-            addLog(`🎉 모든 녹음이 끝났습니다! VREW용 ZIP 파일을 생성합니다!`, 'info');
+            addLog(`🎉🎉🎉 대장정 종료!! VREW용 압축파일을 생성합니다!`, 'success');
             
             const content = await zip.generateAsync({type:"blob"});
             const link = document.createElement("a");
             link.href = URL.createObjectURL(content);
-            link.download = "GD_Azure_Director_Audio.zip";
+            link.download = "GD_Zombie_Vrew_Audio.zip";
             link.click();
         }
     </script>
