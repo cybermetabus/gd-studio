@@ -3,77 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GD TTS Studio v5.0 (Azure Edition)</title>
-    <!-- VREW용 ZIP 묶기 라이브러리 (MP3 변환용 lamejs는 이제 필요 없습니다! 야호!) -->
+    <title>GD TTS Studio v5.1 (Azure Pro Director)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         body { background-color: #1e1e1e; color: #f0f0f0; font-family: 'Malgun Gothic', sans-serif; padding: 20px; }
         h1 { color: #0078d4; }
         .container { display: flex; gap: 20px; }
-        .box { flex: 1; background: #2d2d2d; padding: 20px; border-radius: 8px; }
-        textarea { width: 100%; height: 300px; background: #1e1e1e; color: #fff; border: 1px solid #444; padding: 10px; box-sizing: border-box; }
-        button { background: #0078d4; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .box { flex: 1; background: #2d2d2d; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; }
+        textarea { flex: 1; width: 100%; min-height: 400px; background: #1e1e1e; color: #fff; border: 1px solid #444; padding: 10px; box-sizing: border-box; font-size: 14px; line-height: 1.5; }
+        button { background: #0078d4; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 15px; }
         button:hover { background: #005a9e; }
-        .log-box { height: 300px; overflow-y: auto; background: #000; padding: 10px; font-family: monospace; border-radius: 4px; border: 1px solid #444; }
-        .log-item { margin-bottom: 5px; }
+        .log-box { flex: 1; overflow-y: auto; background: #000; padding: 10px; font-family: monospace; border-radius: 4px; border: 1px solid #444; }
+        .log-item { margin-bottom: 5px; padding: 3px 0; border-bottom: 1px dashed #333; }
         .success { color: #4CAF50; }
         .error { color: #f44336; }
         .info { color: #2196F3; }
+        .char-tag { color: #ffeb3b; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>🚀 GD TTS Studio v5.0 (Azure 쾌속 질주 모드)</h1>
-    <p>1초에 20번 쏘는 괴물 속도! 429 에러여 영원히 안녕~!</p>
+    <h1>🎬 GD TTS Studio v5.1 (자동 성우 캐스팅 모드)</h1>
+    <p>GD님의 원본 대본을 그대로 넣으세요! 나이/성별/감정 태그를 분석해 애저 SSML로 자동 변환합니다.</p>
 
     <div class="container">
         <!-- 1. 대본 입력 영역 -->
         <div class="box">
-            <h3>📝 대본 입력 (캐릭터: 대사 형식)</h3>
-            <textarea id="scriptInput" placeholder="할머니: 아이고 허리야, 비가 오려나보다.&#10;할아버지: 쯧쯧, 약을 챙겨 먹어야지.&#10;내레이션: 그렇게 두 노부부의 아침이 밝았습니다."></textarea>
-            <button onclick="startAzureGeneration()">⚡ 애저 TTS 생성 및 VREW ZIP 다운로드</button>
+            <h3>📝 원본 사연 대본 (캐릭터 세팅 + 본문)</h3>
+            <textarea id="scriptInput" placeholder="여기에 대본을 통째로 복사해서 붙여넣으세요!"></textarea>
+            <button onclick="startAzureGeneration()">⚡ 완벽 감정 TTS 생성 및 VREW ZIP 다운로드</button>
         </div>
 
         <!-- 2. 진행 상황 및 로그 영역 -->
         <div class="box">
-            <h3>📊 실시간 진행 상황</h3>
+            <h3>📊 실시간 디렉팅 및 생성 로그</h3>
             <div id="logBox" class="log-box"></div>
         </div>
     </div>
 
     <script>
-        // GD님이 직접 따오신 애저 무료 API 키 세팅!!
         const AZURE_API_KEY = "FM6xOkd4Ri2eWKmUqABDGbqAZK3T1CP5eyIIUIN5CjzbhKZ6Vp8jJQQJ99CCACYeBjFXJ3w3AAAYACOGBd2v";
         const AZURE_REGION = "eastus";
 
-        // 한국어/일본어 목소리 자동 매핑 세팅
-        const VOICE_MAP = {
-            "할머니": "ko-KR-SunHiNeural",   // 따뜻한 한국어 여성
-            "할아버지": "ko-KR-InJoonNeural", // 중후한 한국어 남성
-            "내레이션": "ko-KR-SeoHyeonNeural", // 차분한 내레이션 톤
-            "일본인": "ja-JP-NanamiNeural",   // 일본어 여성 
-            "기본": "ko-KR-SunHiNeural"       // 캐릭터 안 적혀있으면 기본값
-        };
-
-        // 로그 찍어주는 함수
         function addLog(msg, type="info") {
             const logBox = document.getElementById('logBox');
             logBox.innerHTML += `<div class="log-item ${type}">${msg}</div>`;
-            logBox.scrollTop = logBox.scrollHeight; // 스크롤 맨 아래로 유지
+            logBox.scrollTop = logBox.scrollHeight;
         }
 
-        // 잠깐 쉬는 함수 (애저는 너무 빠르니까 0.1초만 쉬어도 됨!)
         const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-        // ★ 핵심: 애저 API한테 대본 던져주고 MP3 받아오는 찐 함수! ★
-        async function fetchAzureTTS(text, voiceName) {
+        // ★ 핵심 1: 애저 SSML 생성 엔진 (톤/속도 조절 포함) ★
+        async function fetchAzureTTS(text, config, emotionTag) {
             const endpoint = `https://${AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`;
             
-            // 애저는 SSML이라는 태그 방식으로 감정을 전달합니다.
+            let pitch = config.pitch;
+            let rate = config.rate;
+
+            // [감정 지시문]에 따른 실시간 톤 보정 (GD님 대본 맞춤형!)
+            if (emotionTag.includes('흐느끼며') || emotionTag.includes('울먹이는')) {
+                rate = "-15%"; pitch = "-10%"; // 슬프면 느리고 낮게
+            } else if (emotionTag.includes('다급하고') || emotionTag.includes('거칠고')) {
+                rate = "+15%"; // 다급하면 빠르게
+            } else if (emotionTag.includes('해맑게') || emotionTag.includes('맑은')) {
+                pitch = "+10%"; // 해맑으면 톤을 높게
+            }
+
             const ssml = `
                 <speak version='1.0' xml:lang='ko-KR'>
-                    <voice name='${voiceName}'>
-                        ${text}
+                    <voice name='${config.voiceId}'>
+                        <prosody pitch='${pitch}' rate='${rate}'>
+                            ${text}
+                        </prosody>
                     </voice>
                 </speak>
             `.trim();
@@ -83,69 +84,134 @@
                 headers: {
                     'Ocp-Apim-Subscription-Key': AZURE_API_KEY,
                     'Content-Type': 'application/ssml+xml',
-                    'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3', // MP3로 바로 뽑아랏!
+                    'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
                     'User-Agent': 'GDTTS_Studio'
                 },
                 body: ssml
             });
 
-            if (!response.ok) {
-                throw new Error(`애저 형님이 화내심 ㅠㅠ 에러코드: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`API 에러: ${response.status}`);
+            return await response.blob();
+        }
 
-            return await response.blob(); // 고음질 MP3 파일 덩어리 리턴!
+        // ★ 핵심 2: GD님 전용 대본 파서 (분석기) ★
+        function parseScript(rawText) {
+            const lines = rawText.split('\n').map(l => l.trim()).filter(l => l !== '');
+            let isBody = false;
+            const charConfigMap = {};
+            const scriptLines = [];
+
+            // 캐릭터 분석기
+            for (const line of lines) {
+                if (line.includes('========== 본문 ==========')) {
+                    isBody = true;
+                    continue;
+                }
+
+                if (!isBody) {
+                    // [캐릭터/이름/성별/나이/톤] 분석
+                    const match = line.match(/\[캐릭터\/([^\/]+)\/성별:([남여])\/나이:([^/\]]+)/);
+                    if (match) {
+                        const name = match[1].trim();
+                        const gender = match[2];
+                        const ageStr = match[3];
+
+                        // 기본값 세팅
+                        let voiceId = 'ko-KR-SunHiNeural';
+                        let pitch = "0%"; let rate = "0%";
+
+                        if (name.includes('나레이션') || name.includes('내레이션')) {
+                            voiceId = 'ko-KR-SeoHyeonNeural'; // 차분한 내레이션 전용
+                        } else if (gender === '여') {
+                            if (ageStr.includes('60') || ageStr.includes('70') || ageStr.includes('할머니')) {
+                                voiceId = 'ko-KR-SunHiNeural'; pitch = "-15%"; rate = "-10%"; // 할머니 톤
+                            } else if (ageStr.includes('40') || ageStr.includes('50')) {
+                                voiceId = 'ko-KR-SeoHyeonNeural'; pitch = "-5%"; // 중년 여성
+                            } else {
+                                voiceId = 'ko-KR-JiMinNeural'; pitch = "+5%"; // 젊은 여성 (윤소아)
+                            }
+                        } else if (gender === '남') {
+                            if (ageStr.includes('12세') || ageStr.includes('아이')) {
+                                voiceId = 'ko-KR-YuJinNeural'; pitch = "+15%"; // 소년 (윤 덕문)
+                            } else if (ageStr.includes('60') || ageStr.includes('70') || ageStr.includes('노인')) {
+                                voiceId = 'ko-KR-BongJinNeural'; pitch = "-20%"; rate = "-15%"; // 할아버지 (강 노인, 윤 진사)
+                            } else if (ageStr.includes('40') || ageStr.includes('50')) {
+                                voiceId = 'ko-KR-GookMinNeural'; pitch = "-5%"; // 중년 남성 (허 군수, 약재상)
+                            } else {
+                                voiceId = 'ko-KR-InJoonNeural'; pitch = "-10%"; // 젊은 사내 (심재언)
+                            }
+                        }
+                        charConfigMap[name] = { voiceId, pitch, rate };
+                        addLog(`🎭 성우 배정 완료: <span class="char-tag">[${name}]</span> -> ${voiceId} (톤:${pitch}, 속도:${rate})`);
+                    }
+                } else {
+                    // 본문 분석: [이름/감정] "대사"
+                    const match = line.match(/^\[(.*?)\/(.*?)\]\s*(.*)$/);
+                    if (match) {
+                        const name = match[1].trim();
+                        const emotion = match[2].trim();
+                        let text = match[3].trim();
+                        
+                        // 큰따옴표 제거
+                        if (text.startsWith('"') && text.endsWith('"')) {
+                            text = text.substring(1, text.length - 1);
+                        }
+                        scriptLines.push({ name, emotion, text, originalLine: line });
+                    } else if (!line.startsWith('======') && !line.startsWith('[')) {
+                        // 태그 없는 일반 텍스트는 내레이션으로 처리
+                        scriptLines.push({ name: '나레이션', emotion: '', text: line, originalLine: line });
+                    }
+                }
+            }
+            return { charConfigMap, scriptLines };
         }
 
         // 전체 작업 시작 버튼 눌렀을 때!
         async function startAzureGeneration() {
-            const rawText = document.getElementById('scriptInput').value.trim();
-            if (!rawText) return alert("대본을 입력해주세요!");
+            const rawText = document.getElementById('scriptInput').value;
+            if (!rawText.trim()) return alert("대본을 입력해주세요!");
 
-            const lines = rawText.split('\n').filter(line => line.trim() !== '');
-            const zip = new JSZip(); // VREW용 압축파일 준비
+            document.getElementById('logBox').innerHTML = ''; // 로그 초기화
+            addLog(`🚀 대본 분석을 시작합니다...`, 'info');
+
+            const { charConfigMap, scriptLines } = parseScript(rawText);
             
-            addLog(`🚀 총 ${lines.length}줄 작업 시작합니다! 꽉 잡으세요!`, 'info');
+            if (scriptLines.length === 0) {
+                return addLog(`[오류] 본문 대사를 찾을 수 없습니다. 형식을 확인해주세요.`, 'error');
+            }
 
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                let character = "기본";
-                let speech = line;
+            addLog(`✅ 총 ${scriptLines.length}개의 대사/내레이션 추출 완료. 녹음 들어갑니다! 🎬`, 'success');
 
-                // "할머니: 밥 먹었니?" 형식 파싱
-                if (line.includes(':')) {
-                    const parts = line.split(':');
-                    character = parts[0].trim();
-                    speech = parts.slice(1).join(':').trim();
-                }
+            const zip = new JSZip(); 
 
-                // 목소리 매칭 (맵에 없으면 기본 목소리로)
-                const voiceId = VOICE_MAP[character] || VOICE_MAP["기본"];
+            for (let i = 0; i < scriptLines.length; i++) {
+                const lineData = scriptLines[i];
+                
+                // 설정된 캐릭터 정보가 없으면 내레이션(기본값) 적용
+                const config = charConfigMap[lineData.name] || { voiceId: 'ko-KR-SeoHyeonNeural', pitch: "0%", rate: "0%" };
 
                 try {
-                    // 애저 API에 쏘기!
-                    const mp3Blob = await fetchAzureTTS(speech, voiceId);
+                    // 애저 API에 쏘기! (대사 텍스트, 캐릭터 성우 정보, 감정 지시문 전달)
+                    const mp3Blob = await fetchAzureTTS(lineData.text, config, lineData.emotion);
                     
-                    // VREW가 순서대로 읽을 수 있게 파일명에 번호 붙이기 (예: 001.mp3)
                     const fileName = `${String(i + 1).padStart(3, '0')}.mp3`;
                     zip.file(fileName, mp3Blob);
                     
-                    addLog(`[성공] ${fileName} 완료! (캐릭터: ${character})`, 'success');
+                    addLog(`[녹음 완료] ${fileName} <span class="char-tag">[${lineData.name}/${lineData.emotion}]</span>`, 'success');
 
-                    // 구글에선 8.5초 쉬었죠? 애저는 0.1초만 쉬어도 끄떡없습니다! ㅋㅋㅋ
-                    await sleep(100); 
+                    await sleep(100); // 0.1초 쿨타임 (애저 속도)
 
                 } catch (error) {
-                    addLog(`[실패] ${i+1}번째 줄 에러: ${error.message}`, 'error');
+                    addLog(`[실패] ${i+1}번째 대사 에러: ${error.message}`, 'error');
                 }
             }
 
-            addLog(`🎉 모든 음성 생성 완료! ZIP 파일로 묶어서 다운로드합니다!`, 'info');
+            addLog(`🎉 모든 녹음이 끝났습니다! VREW용 ZIP 파일을 생성합니다!`, 'info');
             
-            // 압축해서 파일 다운로드 창 띄우기
             const content = await zip.generateAsync({type:"blob"});
             const link = document.createElement("a");
             link.href = URL.createObjectURL(content);
-            link.download = "GD_Azure_Vrew_Audio.zip";
+            link.download = "GD_Azure_Director_Audio.zip";
             link.click();
         }
     </script>
