@@ -3,63 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GD TTS Studio v6.0 (Zombie Relay Edition)</title>
-    <!-- VREW ZIP 변환용 라이브러리 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <title>GD TTS Studio v7.2 (Masterpiece Edition)</title>
     <style>
         body { background-color: #121212; color: #e0e0e0; font-family: 'Malgun Gothic', sans-serif; padding: 20px; }
-        h1 { color: #bb86fc; text-align: center; }
-        .container { display: flex; flex-direction: column; gap: 15px; max-width: 1200px; margin: 0 auto; }
-        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .key-input { width: 100%; padding: 10px; background: #2d2d2d; color: #03dac6; border: 1px solid #333; margin-bottom: 10px; font-family: monospace; }
-        textarea { width: 100%; height: 350px; background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 15px; box-sizing: border-box; font-size: 14px; line-height: 1.6; resize: vertical; }
-        button { background: #bb86fc; color: #000; border: none; padding: 15px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.3s; }
-        button:hover { background: #3700b3; color: white; }
-        .status-board { display: flex; gap: 10px; margin-bottom: 10px; }
-        .badge { background: #333; padding: 5px 10px; border-radius: 5px; font-size: 12px; }
-        .badge.active { background: #03dac6; color: #000; }
-        .log-box { height: 300px; overflow-y: auto; background: #000; padding: 15px; font-family: monospace; border-radius: 8px; border: 1px solid #333; }
-        .log-item { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dotted #333; }
-        .success { color: #03dac6; } .error { color: #cf6679; } .warn { color: #ffb300; } .info { color: #bb86fc; }
-        .char-tag { color: #ffeb3b; }
+        h1 { color: #00e676; text-align: center; }
+        .subtitle { text-align: center; color: #aaa; margin-bottom: 20px; }
+        .container { display: flex; flex-direction: column; gap: 15px; max-width: 900px; margin: 0 auto; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 10px; border-left: 5px solid #00e676; }
+        .key-input { width: 100%; padding: 12px; background: #2d2d2d; color: #00e676; border: 1px solid #333; font-family: monospace; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
+        
+        /* 옵션 선택 디자인 */
+        .option-group { margin-bottom: 15px; padding: 10px; background: #252525; border-radius: 8px; border: 1px dashed #444; }
+        .option-label { font-weight: bold; color: #ffab00; margin-right: 10px; font-size: 16px; }
+        select { padding: 8px; background: #333; color: #fff; border: 1px solid #555; font-size: 15px; border-radius: 5px; outline: none; cursor: pointer; width: 60%; }
+        select:focus { border-color: #00e676; }
+        .fixed-options { font-size: 13px; color: #888; margin-top: 5px; }
+
+        textarea { width: 100%; height: 350px; background: #2d2d2d; color: #fff; border: 1px solid #444; padding: 15px; box-sizing: border-box; font-size: 14px; line-height: 1.8; resize: vertical; margin-top: 5px; }
+        button { background: #00e676; color: #000; border: none; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; transition: 0.3s; }
+        button:hover { background: #00c853; color: white; }
+        
+        .log-box { height: 180px; overflow-y: auto; background: #000; padding: 15px; font-family: monospace; border-radius: 8px; border: 1px solid #333; }
+        .log-item { margin-bottom: 5px; font-size: 14px; }
+        .success { color: #4CAF50; } .error { color: #f44336; } .warn { color: #ffeb3b; } .info { color: #00e676; }
+        .filtered-text { color: #888; text-decoration: line-through; }
     </style>
 </head>
 <body>
 
-    <h1>🧟‍♂️ GD TTS Studio v6.0 (구글 무한 좀비 릴레이)</h1>
+    <h1>🎙️ GD TTS Studio v7.2 (감성 낭독 마스터)</h1>
+    <p class="subtitle">제목 제거 + 2초 호흡 + 맞춤형 톤! 완벽한 라디오 사연을 만듭니다.</p>
     
     <div class="container">
-        <!-- API 키 입력 영역 -->
+        <!-- 1. API 키 -->
         <div class="box">
-            <h3>🔑 구글 제미나이 API 키 (콤마로 구분해서 6개 꽉꽉 채워 넣으세요!)</h3>
-            <input type="text" id="apiKeysInput" class="key-input" placeholder="AIzaSy..., AIzaSy..., AIzaSy... (반드시 콤마(,)로 구분)">
-            <div id="keyStatus" class="status-board"></div>
+            <h3>🔑 1. 구글 API 키</h3>
+            <input type="text" id="singleApiKey" class="key-input" placeholder="AIzaSy... (이번에 쓸 1개의 키)">
         </div>
 
-        <!-- 대본 입력 영역 -->
+        <!-- 2. 옵션 및 대본 -->
         <div class="box">
-            <h3>📝 원본 사연 대본 (캐릭터 세팅 + 본문)</h3>
-            <textarea id="scriptInput" placeholder="[캐릭터/윤소아/성별:여/나이:20세/톤:맑고 가녀린...]&#10;========== 본문 ==========&#10;[윤소아/흐느끼며] 서방님..."></textarea>
-            <button onclick="startZombieRelay()">🚀 3만 자 릴레이 TTS 생성 시작 (VREW 파일 자동 생성)</button>
+            <h3>📝 2. 성우 옵션 및 대본 투척</h3>
+            
+            <div class="option-group">
+                <span class="option-label">🎙️ 성우 톤 선택:</span>
+                <select id="voiceTone">
+                    <option value="구연동화를 읽는 것처럼, 온화한 목소리로 아주 천천히 또박또박 정겹게 읽어줘.">야담톤 (온화하고 정겨운 구연동화 스타일)</option>
+                    <option value="라디오에서 사연을 읽어주는 스타일로, 대사는 맛깔나게 읽어줘.">라디오사연톤 (맛깔나는 라디오 DJ 스타일)</option>
+                    <option value="시니어들이 잘 알아들을 수 있게 정겨운 목소리로 또박또박 읽어줘.">시니어사연톤 (또박또박하고 정겨운 시니어 맞춤형)</option>
+                </select>
+                <div class="fixed-options">※ 고정 설정 적용됨: Single-speaker | Temperature: 1.35 | Voice: Zephyr</div>
+            </div>
+
+            <textarea id="scriptInput" placeholder="여기에 대본을 통째로 붙여넣으세요. [인트로]나 【챕터1...】 같은 괄호 제목들은 로봇이 알아서 빼고 읽습니다!"></textarea>
+            <button id="startBtn" onclick="startGeneration()">🔥 대본 정리 & 2초 무음 컷팅으로 MP3 뽑아내기!</button>
         </div>
 
-        <!-- 로그 영역 -->
+        <!-- 3. 로그 -->
         <div class="box">
-            <h3>📊 좀비 릴레이 실시간 중계</h3>
+            <h3>📊 로그 및 진행 상황</h3>
             <div id="logBox" class="log-box"></div>
         </div>
     </div>
 
     <script>
-        // --------------------------------------------------------
-        // 1. 좀비 릴레이 핵심 설정
-        // --------------------------------------------------------
-        let apiKeys = [];
-        let currentKeyIndex = 0;
-        const REQUEST_DELAY = 8500; // 구글 무료 티어 방어막 회피용 (8.5초)
-        const MAX_RETRY = 3;
-
-        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+        let isRunning = false;
 
         function addLog(msg, type="info") {
             const logBox = document.getElementById('logBox');
@@ -67,197 +75,112 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        // 키 상태 UI 업데이트
-        function updateKeyUI() {
-            const board = document.getElementById('keyStatus');
-            board.innerHTML = '';
-            apiKeys.forEach((key, idx) => {
-                const badge = document.createElement('span');
-                badge.className = `badge ${idx === currentKeyIndex ? 'active' : ''}`;
-                badge.innerText = `Key ${idx + 1} ${idx === currentKeyIndex ? '(달리는 중🏃)' : '(대기 중😴)'}`;
-                board.appendChild(badge);
-            });
-        }
-
-        // ★ 핵심: 429 맞고 쓰러지면 다음 키로 바통 터치! ★
-        async function switchToNextKey(reason) {
-            addLog(`⚠️ [Key ${currentKeyIndex + 1} 전사] 원인: ${reason}`, 'warn');
-            currentKeyIndex++;
+        async function startGeneration() {
+            if (isRunning) return;
+            const apiKey = document.getElementById('singleApiKey').value.trim();
+            if (!apiKey) return alert("API 키를 넣어주세요!");
             
-            // 6개 다 쓰러졌으면? 1분간 명상(딥슬립) 후 1번 키 예도토전생!
-            if (currentKeyIndex >= apiKeys.length) {
-                addLog(`💀 모든 좀비(API 키)가 전멸했습니다! 60초간 딥슬립 후 부활합니다... 💤`, 'error');
-                await sleep(60000); 
-                currentKeyIndex = 0;
-                addLog(`🧟‍♂️ 좀비 군단 부활! Key 1번부터 다시 달립니다!`, 'info');
-            } else {
-                addLog(`🏃‍♂️ 바통 터치 완료! Key ${currentKeyIndex + 1} 출격!`, 'info');
-            }
-            updateKeyUI();
-        }
+            const rawText = document.getElementById('scriptInput').value;
+            if (!rawText.trim()) return alert("대본을 입력하세요!");
 
+            const selectedTone = document.getElementById('voiceTone').value;
+            const selectedToneName = document.getElementById('voiceTone').options[document.getElementById('voiceTone').selectedIndex].text;
 
-        // --------------------------------------------------------
-        // 2. 대본 완벽 파서 (캐릭터 설정 & 감정 추출)
-        // --------------------------------------------------------
-        function parseScript(rawText) {
+            document.getElementById('logBox').innerHTML = ''; 
+            addLog(`🚀 [${selectedToneName}] 설정으로 작업을 시작합니다.`, 'warn');
+            
+            isRunning = true;
+            document.getElementById('startBtn').innerText = "⏳ 구글이 낭독 중입니다... (절대 끄지 마세요!)";
+            document.getElementById('startBtn').style.background = "#555";
+
+            // ----------------------------------------------------
+            // ★ 핵심 1: [제목] / 【챕터】 등 불필요한 괄호 문구 제거 ★
+            // ----------------------------------------------------
             const lines = rawText.split('\n').map(l => l.trim()).filter(l => l !== '');
-            let isBody = false;
-            const characters = {};
-            const scriptLines = [];
+            let cleanScript = "";
+            let removedCount = 0;
 
             for (const line of lines) {
-                if (line.includes('========== 본문 ==========')) {
-                    isBody = true;
-                    continue;
+                // 맨 앞이 대괄호([, ])나 꺾쇠(【, 】)로 둘러싸인 '제목/안내문'인 경우 (대사가 아닌 경우)
+                // 정규식: ^\[.*\]$ 또는 ^【.*】$ (문장 전체가 괄호로 묶여있을 때 제거)
+                if (line.match(/^\[.*\]$/) || line.match(/^【.*】$/)) {
+                    addLog(`🗑️ 낭독 제외됨: <span class="filtered-text">${line}</span>`, 'info');
+                    removedCount++;
+                    continue; // 이 줄은 건너뜀 (안 읽음)
                 }
-
-                if (!isBody) {
-                    const match = line.match(/\[캐릭터\/([^\/]+)\/성별:([남여])\/나이:([^/\]]+)\/톤:(.*?)\]/);
-                    if (match) {
-                        characters[match[1].trim()] = {
-                            gender: match[2],
-                            age: match[3],
-                            tone: match[4].trim()
-                        };
-                    }
-                } else {
-                    const match = line.match(/^\[(.*?)\/(.*?)\]\s*(.*)$/);
-                    if (match) {
-                        let text = match[3].trim();
-                        if (text.startsWith('"') && text.endsWith('"')) text = text.substring(1, text.length - 1);
-                        scriptLines.push({ name: match[1].trim(), emotion: match[2].trim(), text });
-                    } else if (!line.startsWith('======') && !line.startsWith('[')) {
-                        scriptLines.push({ name: '나레이션', emotion: '차분하게', text: line });
-                    }
-                }
+                
+                // 본문 텍스트에 2초 무음 지시문 삽입
+                cleanScript += line + "\n[2초간 완전한 침묵]\n"; 
             }
-            return { characters, scriptLines };
-        }
 
+            addLog(`✅ 총 ${removedCount}개의 제목 태그를 제거하고 대본을 정리했습니다.`, 'success');
 
-        // --------------------------------------------------------
-        // 3. 구글 제미나이 1.5 Flash (안정적인 최신 모델) 호출기
-        // --------------------------------------------------------
-        // 참고: 2.5 프리뷰는 불안정해서 1.5 Flash 최신 버전으로 돌립니다!
-        async function fetchGeminiAudio(text, charInfo, emotion) {
-            let retryCount = 0;
+            // ----------------------------------------------------
+            // ★ 핵심 2: 구글에 쏠 완벽한 프롬프트(명령서) 조립 ★
+            // ----------------------------------------------------
+            const masterPrompt = `
+당신은 최고의 전문 성우 'Zephyr' 입니다. 
+모드: single-speaker audio
+말투/톤: ${selectedTone}
 
-            // 프롬프트 엔지니어링의 정수 (연기 지시)
-            const prompt = `
-당신은 최고의 라디오 드라마 성우입니다.
-역할: ${charInfo ? `${charInfo.age} ${charInfo.gender}, 톤: ${charInfo.tone}` : '차분한 내레이터'}
-현재 감정/상황: [${emotion}]
-대사: "${text}"
+아래 제공되는 대본을 읽어주세요.
+【가장 중요한 절대 규칙】
+1. 각 문장이 끝날 때마다 명시된 "[2초간 완전한 침묵]" 지시를 반드시 지키세요. 실제로 아무 소리도, 숨소리도 내지 않고 정확히 2초를 쉬어야 합니다.
+2. 음악, 효과음, 환경음 없이 오직 깨끗한 목소리만 출력하세요.
 
-위 대사를 설정된 역할과 감정에 완벽하게 몰입하여, 한국어로 자연스럽게 연기하듯 읽어주세요. 
-잡음 없이 오직 목소리만 출력해야 합니다.
+대본:
+"${cleanScript}"
 `;
 
-            while (retryCount < MAX_RETRY) {
-                const currentKey = apiKeys[currentKeyIndex];
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${currentKey}`;
-
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            generationConfig: { 
-                                // 제미나이가 오디오를 뱉도록 설정 (1.5 Flash부터 지원)
-                                responseMimeType: "audio/mp3" 
-                            }
-                        })
-                    });
-
-                    if (response.status === 429) {
-                        await switchToNextKey('429 Rate Limit (한도 초과)');
-                        continue; // 바통 터치하고 반복문 처음으로 돌아가서 재시도!
-                    }
-
-                    if (!response.ok) throw new Error(`API Error ${response.status}`);
-
-                    const data = await response.json();
-                    
-                    // 제미나이가 오디오 데이터를 base64로 줬을 경우 변환
-                    if (data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data) {
-                        const base64Audio = data.candidates[0].content.parts[0].inlineData.data;
-                        const byteCharacters = atob(base64Audio);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+            try {
+                addLog(`📡 구글(Temperature 1.35 셋팅)에 통짜 요청을 전송합니다!`, 'warn');
+                
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: masterPrompt }] }],
+                        generationConfig: { 
+                            responseMimeType: "audio/mp3",
+                            temperature: 1.35 // GD님이 요청하신 고정 옵션 적용!
                         }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        return new Blob([byteArray], { type: 'audio/mp3' });
-                    } else {
-                        throw new Error('오디오 데이터를 받지 못함 (텍스트만 옴)');
-                    }
+                    })
+                });
 
-                } catch (e) {
-                    addLog(`[에러] ${e.message}. 5초 후 재시도... (${retryCount + 1}/${MAX_RETRY})`, 'error');
-                    retryCount++;
-                    await sleep(5000);
+                if (response.status === 429) {
+                    throw new Error("429 에러! 방금 전 작업의 쿨타임(1분)이 아직 안 끝났거나 IP가 막혔습니다. 키를 교체하세요.");
                 }
-            }
-            throw new Error('최대 재시도 횟수 초과');
-        }
+                if (!response.ok) throw new Error(`API Error ${response.status}`);
 
+                const data = await response.json();
+                if (data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data) {
+                    const base64Audio = data.candidates[0].content.parts[0].inlineData.data;
+                    const byteCharacters = atob(base64Audio);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    const mp3Blob = new Blob([new Uint8Array(byteNumbers)], { type: 'audio/mp3' });
 
-        // --------------------------------------------------------
-        // 4. 대망의 메인 컨트롤러 (VREW 파일 묶기)
-        // --------------------------------------------------------
-        async function startZombieRelay() {
-            const rawKeys = document.getElementById('apiKeysInput').value;
-            apiKeys = rawKeys.split(',').map(k => k.trim()).filter(k => k.length > 10);
-            
-            if (apiKeys.length === 0) return alert("API 키를 최소 1개 이상 입력해주세요!");
-            if (apiKeys.length < 6) alert(`현재 입력된 키는 ${apiKeys.length}개입니다. 6개를 꽉 채우는 걸 권장합니다!`);
-            
-            currentKeyIndex = 0;
-            updateKeyUI();
-
-            const rawText = document.getElementById('scriptInput').value;
-            document.getElementById('logBox').innerHTML = ''; 
-            
-            const { characters, scriptLines } = parseScript(rawText);
-            if (scriptLines.length === 0) return alert("대본 형식을 확인해주세요!");
-
-            addLog(`🚀 3만 자 정복 작전 개시! 총 ${scriptLines.length}개의 대사가 추출되었습니다.`, 'success');
-            
-            const zip = new JSZip();
-
-            for (let i = 0; i < scriptLines.length; i++) {
-                const line = scriptLines[i];
-                const charInfo = characters[line.name];
-
-                addLog(`🎬 [${i+1}/${scriptLines.length}] 녹음 중: <span class="char-tag">[${line.name}/${line.emotion}]</span>`, 'info');
-
-                try {
-                    const mp3Blob = await fetchGeminiAudio(line.text, charInfo, line.emotion);
-                    const fileName = `${String(i + 1).padStart(4, '0')}.mp3`;
-                    zip.file(fileName, mp3Blob);
+                    addLog(`🎉 완벽합니다! 거대한 MP3 파일 다운로드를 시작합니다!`, 'success');
                     
-                    addLog(`✅ [성공] ${fileName} 저장 완료!`, 'success');
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(mp3Blob);
+                    link.download = `GD_Story_VrewReady.mp3`;
+                    link.click();
+                    
+                    addLog(`💡 다음 단계: 다운받은 MP3를 VREW에 넣고 [무음 구간 줄이기]를 실행하면 자막이 예쁘게 나뉩니다!`, 'info');
 
-                    // 구글 눈치채지 못하게 8.5초 딜레이 (이때 유튜브 보면서 쉬시면 됩니다)
-                    if (i < scriptLines.length - 1) {
-                        addLog(`⏳ 구글 방어막 회피 중... 8.5초 대기...`, 'warn');
-                        await sleep(REQUEST_DELAY); 
-                    }
-
-                } catch (e) {
-                    addLog(`❌ [최종 실패] ${i+1}번째 대사를 건너뜁니다: ${e.message}`, 'error');
+                } else {
+                    throw new Error('구글이 오디오를 생성하지 못했습니다. (텍스트로만 응답함)');
                 }
-            }
 
-            addLog(`🎉🎉🎉 대장정 종료!! VREW용 압축파일을 생성합니다!`, 'success');
-            
-            const content = await zip.generateAsync({type:"blob"});
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(content);
-            link.download = "GD_Zombie_Vrew_Audio.zip";
-            link.click();
+            } catch (e) {
+                addLog(`❌ [실패] ${e.message}`, 'error');
+            } finally {
+                isRunning = false;
+                document.getElementById('startBtn').innerText = "🔥 대본 정리 & 2초 무음 컷팅으로 MP3 뽑아내기!";
+                document.getElementById('startBtn').style.background = "#00e676";
+            }
         }
     </script>
 </body>
