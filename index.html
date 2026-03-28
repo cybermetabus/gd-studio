@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GD TTS Studio v4.3</title>
+<title>GD TTS Studio v5.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -15,8 +15,8 @@ h1 { text-align:center; color:#e94560; margin-bottom:5px; }
 label { display:block; color:#aaa; font-size:13px; margin-bottom:5px; }
 input[type=text], textarea, select { width:100%; background:#0f3460; border:1px solid #333; color:#eee; border-radius:6px; padding:10px; font-size:14px; }
 select { cursor:pointer; }
-textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; }
-.style-textarea { height:80px; margin-top:8px; }
+textarea { height:200px; resize:vertical; font-family:'Courier New',monospace; line-height:1.6; font-size:12px; }
+.style-textarea { height:80px; margin-top:8px; font-family:'Segoe UI',sans-serif; }
 .btn { padding:12px 24px; border:none; border-radius:6px; font-size:15px; font-weight:bold; cursor:pointer; margin:5px; }
 .btn-start { background:#e94560; color:#fff; }
 .btn-start:hover { background:#c73652; }
@@ -25,6 +25,8 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
 .btn-download:hover { background:#3ba884; }
 .btn-download:disabled { background:#555; color:#888; cursor:not-allowed; }
 .btn-stop { background:#ff6b35; color:#fff; }
+.btn-secondary { background:#0f3460; color:#4ecca3; border:1px solid #4ecca3; }
+.btn-secondary:hover { background:#4ecca3; color:#1a1a2e; }
 .controls { text-align:center; margin:15px 0; }
 .progress-bar { width:100%; height:30px; background:#0f3460; border-radius:15px; overflow:hidden; margin:10px 0; }
 .progress-fill { height:100%; background:linear-gradient(90deg,#e94560,#4ecca3); transition:width 0.5s; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:bold; }
@@ -54,14 +56,27 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
 .checkbox-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
 .checkbox-row input[type=checkbox] { width:18px; height:18px; cursor:pointer; }
 .checkbox-row label { margin:0; cursor:pointer; color:#eee; font-size:14px; }
+.file-upload { border:2px dashed #4ecca3; border-radius:8px; padding:20px; text-align:center; cursor:pointer; transition:background 0.3s; }
+.file-upload:hover { background:#0f3460; }
+.file-upload.loaded { border-color:#e94560; background:#1e1e3a; }
+.scene-list { max-height:200px; overflow-y:auto; margin-top:10px; }
+.scene-item { background:#0f3460; border-radius:4px; padding:6px 10px; margin:3px 0; font-size:12px; display:flex; justify-content:space-between; }
+.scene-item .scene-id { color:#4ecca3; font-weight:bold; min-width:80px; }
+.scene-item .scene-preview { color:#888; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-left:10px; }
+.scene-item .scene-chars { color:#f0a500; min-width:50px; text-align:right; }
+.chunk-list { margin-top:10px; }
+.chunk-item { background:#0f3460; border-radius:6px; padding:8px 12px; margin:4px 0; font-size:12px; }
+.chunk-item .chunk-title { color:#e94560; font-weight:bold; }
+.chunk-item .chunk-scenes { color:#888; margin-top:3px; }
+.chunk-item .chunk-chars { color:#4ecca3; }
 </style>
 </head>
 <body>
 
 <h1>GD TTS Studio</h1>
-<div class="version">v4.3 — Zephyr 고정 | 멀티키 | 스타일 선택 | 자동 개별 다운로드</div>
+<div class="version">v5.0 — JSON 씬 대본 | Pro TTS | 멀티키 | 씬 매핑 | 자동 다운로드</div>
 
-<!-- API 키 -->
+<!-- 1. API 키 -->
 <div class="section">
   <h2>1. API 키</h2>
   <label>Gemini API Key — 여러 개 입력 시 쉼표(,)로 구분</label>
@@ -69,20 +84,33 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
   <div class="key-status" id="keyStatus"></div>
 </div>
 
-<!-- 대본 입력 -->
+<!-- 2. JSON 대본 업로드 -->
 <div class="section">
-  <h2>2. 대본 입력</h2>
-  <label>대본을 그대로 붙여넣으세요. [ ], 【 】, ( ) 안의 내용은 자동 제거됩니다.</label>
-  <textarea id="scriptInput" placeholder="여기에 대본 전체를 붙여넣으세요..."></textarea>
-  <div style="margin-top:8px; color:#888; font-size:12px;">
-    <span id="charCount">0</span>자 | 예상 청크: <span id="chunkEstimate">0</span>개 | 예상 소요: <span id="timeEstimate">0</span>분
+  <h2>2. 씬 대본 (JSON)</h2>
+  <div class="file-upload" id="fileUpload" onclick="document.getElementById('jsonFile').click()">
+    <div style="font-size:24px; margin-bottom:8px;">📄</div>
+    <div>JSON 파일을 클릭하여 업로드하거나, 아래에 직접 붙여넣기</div>
+    <input type="file" id="jsonFile" accept=".json" style="display:none" onchange="handleFileUpload(event)">
   </div>
+  <textarea id="jsonInput" placeholder='{"scene-01": "대사...", "scene-02": "대사...", ...}' style="margin-top:10px;"></textarea>
+  <div class="controls" style="margin-top:8px;">
+    <button class="btn btn-secondary" onclick="parseJSON()">JSON 파싱</button>
+  </div>
+  <div style="margin-top:8px; color:#888; font-size:12px;">
+    씬: <span id="sceneCount">0</span>개 | 총 글자: <span id="totalChars">0</span>자 | 예상 청크: <span id="chunkCount">0</span>개
+  </div>
+  <div class="scene-list" id="sceneList"></div>
 </div>
 
-<!-- 스타일 & 설정 -->
-<div class="section">
-  <h2>3. 음성 스타일 & 설정</h2>
+<!-- 3. 청크 미리보기 -->
+<div class="section" id="chunkSection" style="display:none;">
+  <h2>3. 청크 분할 미리보기</h2>
+  <div class="chunk-list" id="chunkList"></div>
+</div>
 
+<!-- 4. 스타일 & 설정 -->
+<div class="section">
+  <h2>4. 음성 스타일 & 설정</h2>
   <label>음성 스타일 선택</label>
   <select id="styleSelect" onchange="onStyleChange()">
     <option value="yadam">야담톤 — 구연동화 스타일, 온화하고 정겹게</option>
@@ -90,7 +118,6 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
     <option value="senior">시니어사연톤 — 또박또박, 정겨운 목소리</option>
     <option value="custom">직접 입력</option>
   </select>
-
   <div class="style-preview" id="stylePreview">구연동화를 읽는 것처럼, 온화한 목소리로 아주 천천히 또박또박 정겹게 읽어줘.</div>
   <textarea class="style-textarea" id="customStyle" style="display:none;" placeholder="원하는 스타일을 직접 입력하세요..."></textarea>
 
@@ -108,16 +135,15 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
       <input type="text" id="temperature" value="1.35">
     </div>
   </div>
-
   <div class="checkbox-row">
     <input type="checkbox" id="autoDownload" checked>
-    <label for="autoDownload">청크 완료 시 WAV 자동 개별 다운로드 (브라우저 꺼져도 안전)</label>
+    <label for="autoDownload">청크 완료 시 WAV 자동 개별 다운로드</label>
   </div>
 </div>
 
-<!-- 실행 -->
+<!-- 5. TTS 생성 -->
 <div class="section">
-  <h2>4. TTS 생성</h2>
+  <h2>5. TTS 생성</h2>
   <div class="controls">
     <button class="btn btn-start" id="btnStart" onclick="startTTS()">TTS 생성 시작</button>
     <button class="btn btn-stop" id="btnStop" onclick="stopTTS()" style="display:none;">중지</button>
@@ -132,11 +158,12 @@ textarea { height:300px; resize:vertical; font-family:inherit; line-height:1.8; 
   <div id="log"></div>
 </div>
 
-<!-- 결과 -->
+<!-- 6. 결과 -->
 <div class="section">
-  <h2>5. 결과</h2>
+  <h2>6. 결과</h2>
   <div class="controls">
-    <button class="btn btn-download" id="btnDownloadZip" onclick="downloadZip()" disabled>전체 ZIP 다운로드</button>
+    <button class="btn btn-download" id="btnDownloadZip" onclick="downloadZip()" disabled>전체 ZIP 다운로드 (WAV + 매핑)</button>
+    <button class="btn btn-download" id="btnDownloadMapping" onclick="downloadMapping()" disabled>씬 매핑 JSON 다운로드</button>
   </div>
   <div class="results" id="results"></div>
 </div>
@@ -172,7 +199,10 @@ function getStyleText() {
 }
 
 // ─── 전역 변수 ───
-let chunks = [];
+let scenes = {};         // { "scene-01": "텍스트", ... }
+let sceneOrder = [];     // ["scene-01", "scene-02", ...]
+let chunks = [];         // [{ text, scenes: ["scene-01",...], texts: {} }]
+let chunkMapping = [];   // 최종 매핑 데이터
 let audioBlobs = {};
 let isRunning = false;
 let isStopped = false;
@@ -198,13 +228,139 @@ function addLog(msg, type='info') {
   log.scrollTop = log.scrollHeight;
 }
 
-// ─── 자동 파일 다운로드 ───
+function generateId(len=10) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  let result = '';
+  for (let i = 0; i < len; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+  return result;
+}
+
 function autoDownloadFile(blob, filename) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = filename;
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+// ─── JSON 파일 업로드 ───
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('jsonInput').value = e.target.result;
+    document.getElementById('fileUpload').classList.add('loaded');
+    document.querySelector('#fileUpload div:first-child').textContent = '✅';
+    document.querySelector('#fileUpload div:last-of-type').textContent = file.name + ' 로드됨';
+    parseJSON();
+  };
+  reader.readAsText(file);
+}
+
+// ─── JSON 파싱 ───
+function parseJSON() {
+  const raw = document.getElementById('jsonInput').value.trim();
+  if (!raw) { alert('JSON을 입력하세요.'); return; }
+
+  try {
+    scenes = JSON.parse(raw);
+  } catch(e) {
+    alert('JSON 파싱 에러: ' + e.message);
+    return;
+  }
+
+  // 씬 순서 정렬 (scene-01, scene-02, ...)
+  sceneOrder = Object.keys(scenes).sort((a, b) => {
+    const numA = parseInt(a.replace(/\D/g, '')) || 0;
+    const numB = parseInt(b.replace(/\D/g, '')) || 0;
+    return numA - numB;
+  });
+
+  if (sceneOrder.length === 0) { alert('씬이 없습니다.'); return; }
+
+  // 괄호 내용 제거
+  function cleanText(text) {
+    text = text.replace(/\[.*?\]/g, '');
+    text = text.replace(/【.*?】/g, '');
+    text = text.replace(/\(.*?\)/g, '');
+    text = text.replace(/\\n/g, '\n');
+    text = text.replace(/\n{3,}/g, '\n\n');
+    return text.trim();
+  }
+
+  // 씬 텍스트 정리
+  for (const key of sceneOrder) {
+    scenes[key] = cleanText(scenes[key]);
+  }
+
+  // 통계 표시
+  let totalChars = 0;
+  const listEl = document.getElementById('sceneList');
+  listEl.innerHTML = '';
+
+  for (const key of sceneOrder) {
+    const text = scenes[key];
+    totalChars += text.length;
+    const div = document.createElement('div');
+    div.className = 'scene-item';
+    div.innerHTML = `
+      <span class="scene-id">${key}</span>
+      <span class="scene-preview">${text.substring(0, 60)}...</span>
+      <span class="scene-chars">${text.length}자</span>
+    `;
+    listEl.appendChild(div);
+  }
+
+  const chunkSize = parseInt(document.getElementById('chunkSize').value) || 1500;
+  document.getElementById('sceneCount').textContent = sceneOrder.length;
+  document.getElementById('totalChars').textContent = totalChars;
+  document.getElementById('chunkCount').textContent = Math.ceil(totalChars / chunkSize);
+
+  // 청크 분할
+  buildChunks();
+}
+
+// ─── 씬을 청크로 묶기 ───
+function buildChunks() {
+  const maxLen = parseInt(document.getElementById('chunkSize').value) || 1500;
+  chunks = [];
+  let currentChunk = { text: '', scenes: [], texts: {} };
+
+  for (const key of sceneOrder) {
+    const sceneText = scenes[key];
+    const combined = currentChunk.text ? currentChunk.text + '\n' + sceneText : sceneText;
+
+    if (combined.length > maxLen && currentChunk.text.length > 0) {
+      // 현재 청크 저장, 새 청크 시작
+      chunks.push(currentChunk);
+      currentChunk = { text: sceneText, scenes: [key], texts: {} };
+      currentChunk.texts[key] = sceneText;
+    } else {
+      currentChunk.text = combined;
+      currentChunk.scenes.push(key);
+      currentChunk.texts[key] = sceneText;
+    }
+  }
+  if (currentChunk.text.length > 0) chunks.push(currentChunk);
+
+  // 청크 미리보기 표시
+  const chunkSection = document.getElementById('chunkSection');
+  const chunkListEl = document.getElementById('chunkList');
+  chunkSection.style.display = 'block';
+  chunkListEl.innerHTML = '';
+
+  chunks.forEach((chunk, i) => {
+    const div = document.createElement('div');
+    div.className = 'chunk-item';
+    div.innerHTML = `
+      <div class="chunk-title">청크 ${String(i+1).padStart(3,'0')} <span class="chunk-chars">(${chunk.text.length}자)</span></div>
+      <div class="chunk-scenes">씬: ${chunk.scenes.join(', ')}</div>
+    `;
+    chunkListEl.appendChild(div);
+  });
+
+  document.getElementById('chunkCount').textContent = chunks.length;
 }
 
 // ─── 키 상태 ───
@@ -243,49 +399,6 @@ function switchToNextKey(reason) {
   addLog(`● 모든 키 소진!`, 'err');
   return false;
 }
-
-// ─── 대본 정리 ───
-function cleanScript(text) {
-  text = text.replace(/\[.*?\]/g, '');
-  text = text.replace(/【.*?】/g, '');
-  text = text.replace(/\(.*?\)/g, '');
-  text = text.replace(/\n{3,}/g, '\n\n');
-  text = text.trim();
-  return text;
-}
-
-// ─── 텍스트 분할 (문장 단위) ───
-function splitText(text, maxLen) {
-  const result = [];
-  const sentences = text.split(/(?<=[.!?。\n])|(?<=다[\s\n])|(?<=요[\s\n])|(?<=죠[\s\n])|(?<=니다[\s\n])/);
-  let current = '';
-
-  for (const sent of sentences) {
-    if (sent.trim() === '') continue;
-    const candidate = current ? current + sent : sent;
-    if (candidate.length > maxLen && current.length > 0) {
-      result.push(current.trim());
-      current = sent;
-    } else {
-      current = candidate;
-    }
-  }
-  if (current.trim()) result.push(current.trim());
-  return result.filter(c => c.length > 0);
-}
-
-// ─── 글자수 표시 ───
-document.getElementById('scriptInput').addEventListener('input', function() {
-  const clean = cleanScript(this.value);
-  const len = clean.length;
-  const chunkSize = parseInt(document.getElementById('chunkSize').value) || 1500;
-  const delay = parseInt(document.getElementById('requestDelay').value) || 25;
-  const numChunks = len > 0 ? Math.ceil(len / chunkSize) : 0;
-  const minutes = Math.ceil(numChunks * delay / 60);
-  document.getElementById('charCount').textContent = len;
-  document.getElementById('chunkEstimate').textContent = numChunks;
-  document.getElementById('timeEstimate').textContent = minutes;
-});
 
 // ─── WAV 변환 ───
 function pcmToWav(pcmData, sampleRate=24000, numChannels=1, bitsPerSample=16) {
@@ -362,14 +475,14 @@ function startTimer() {
 function stopTimer() { if (timerInterval) clearInterval(timerInterval); }
 
 // ─── 결과 항목 ───
-function addResultItem(fileNum, text, blob) {
+function addResultItem(fileNum, chunk, blob) {
   const div = document.createElement('div');
   div.className = 'result-item';
   const url = URL.createObjectURL(blob);
   div.innerHTML = `
     <div class="info">
-      <div class="title">${fileNum}.wav (${text.length}자)</div>
-      <div class="preview">${text.substring(0, 80)}...</div>
+      <div class="title">${fileNum}.wav (${chunk.text.length}자) — ${chunk.scenes.length}씬</div>
+      <div class="preview">${chunk.scenes.join(', ')}</div>
     </div>
     <audio controls src="${url}" style="height:35px;"></audio>
   `;
@@ -388,33 +501,29 @@ async function startTTS() {
   const styleText = getStyleText();
   if (!styleText) { alert('음성 스타일을 입력하세요.'); return; }
 
-  const rawScript = document.getElementById('scriptInput').value;
-  if (!rawScript.trim()) { alert('대본을 입력하세요.'); return; }
+  if (chunks.length === 0) { alert('먼저 JSON을 파싱하세요.'); return; }
 
-  const chunkSize = parseInt(document.getElementById('chunkSize').value) || 1500;
   const delay = parseInt(document.getElementById('requestDelay').value) || 25;
   const temperature = document.getElementById('temperature').value || '1.35';
   const autoSave = document.getElementById('autoDownload').checked;
 
-  const cleanedScript = cleanScript(rawScript);
-  chunks = splitText(cleanedScript, chunkSize);
   audioBlobs = {};
-
-  if (chunks.length === 0) { alert('정리 후 대본이 비어있습니다.'); return; }
+  chunkMapping = [];
 
   document.getElementById('log').innerHTML = '';
   document.getElementById('results').innerHTML = '';
 
   addLog(`스타일: ${styleText.substring(0, 50)}...`, 'info');
-  addLog(`대본 정리 완료: ${cleanedScript.length}자 → ${chunks.length}개 청크`, 'ok');
-  chunks.forEach((c, i) => addLog(`  청크 ${i+1}: ${c.length}자`, 'info'));
-  addLog(`API 키: ${apiKeys.length}개 | 간격: ${delay}초 | 분할: ${chunkSize}자 | 자동저장: ${autoSave ? 'ON' : 'OFF'}`, 'info');
+  addLog(`씬: ${sceneOrder.length}개 → ${chunks.length}개 청크`, 'ok');
+  chunks.forEach((c, i) => addLog(`  청크 ${i+1}: ${c.text.length}자 (${c.scenes.join(', ')})`, 'info'));
+  addLog(`API 키: ${apiKeys.length}개 | 간격: ${delay}초 | 모델: Pro Preview TTS`, 'info');
 
   isRunning = true;
   isStopped = false;
   document.getElementById('btnStart').disabled = true;
   document.getElementById('btnStop').style.display = 'inline-block';
   document.getElementById('btnDownloadZip').disabled = true;
+  document.getElementById('btnDownloadMapping').disabled = true;
   document.getElementById('statTotal').textContent = chunks.length;
   document.getElementById('statDone').textContent = 0;
   document.getElementById('statFail').textContent = 0;
@@ -428,9 +537,9 @@ async function startTTS() {
     if (isStopped) { addLog('사용자가 중지했습니다.', 'warn'); break; }
 
     const fileNum = String(i + 1).padStart(3, '0');
-    const chunkText = chunks[i];
+    const chunk = chunks[i];
 
-    addLog(`[${fileNum}/${String(chunks.length).padStart(3,'0')}] 생성 중... (${chunkText.length}자) [키${currentKeyIndex+1}]`, 'info');
+    addLog(`[${fileNum}/${String(chunks.length).padStart(3,'0')}] 생성 중... (${chunk.text.length}자, ${chunk.scenes.length}씬) [키${currentKeyIndex+1}]`, 'info');
 
     let success = false;
     let retry = 0;
@@ -438,19 +547,32 @@ async function startTTS() {
 
     while (retry < MAX_RETRY && !success && !isStopped) {
       try {
-        const wavBlob = await callTTS(chunkText, apiKeys[currentKeyIndex], temperature, styleText);
+        const wavBlob = await callTTS(chunk.text, apiKeys[currentKeyIndex], temperature, styleText);
 
-        audioBlobs[fileNum] = { audio: wavBlob, text: chunkText };
+        audioBlobs[fileNum] = { audio: wavBlob, chunk: chunk };
         doneCount++;
         success = true;
+
+        // 매핑 데이터 저장
+        chunkMapping.push({
+          file: `${fileNum}.wav`,
+          chunkIndex: i,
+          chars: chunk.text.length,
+          scenes: chunk.scenes,
+          texts: chunk.texts,
+          firstWords: {}
+        });
+        // 각 씬의 첫 30자 저장 (Whisper 매칭용)
+        for (const sceneId of chunk.scenes) {
+          chunkMapping[chunkMapping.length - 1].firstWords[sceneId] = chunk.texts[sceneId].substring(0, 30);
+        }
 
         if (typeof keyUsage[currentKeyIndex] === 'number') keyUsage[currentKeyIndex]++;
         updateKeyStatus();
 
         addLog(`✓ ${fileNum} 완료 (${(wavBlob.size/1024).toFixed(0)}KB)`, 'ok');
-        addResultItem(fileNum, chunkText, wavBlob);
+        addResultItem(fileNum, chunk, wavBlob);
 
-        // 자동 개별 다운로드
         if (autoSave) {
           autoDownloadFile(wavBlob, `${fileNum}.wav`);
           addLog(`💾 ${fileNum}.wav 자동 저장됨`, 'ok');
@@ -519,8 +641,9 @@ async function startTTS() {
 
   if (doneCount > 0) {
     document.getElementById('btnDownloadZip').disabled = false;
+    document.getElementById('btnDownloadMapping').disabled = false;
     addLog(`\n✅ 완료! 성공: ${doneCount}, 실패: ${failCount}`, 'ok');
-    if (autoSave) addLog(`💾 WAV 파일 ${doneCount}개가 다운로드 폴더에 저장되었습니다.`, 'ok');
+    if (autoSave) addLog(`💾 WAV ${doneCount}개가 다운로드 폴더에 저장됨`, 'ok');
   } else {
     addLog(`\n❌ 모든 청크 실패`, 'err');
   }
@@ -531,26 +654,49 @@ function stopTTS() {
   addLog('중지 요청...', 'warn');
 }
 
+// ─── 매핑 JSON 다운로드 ───
+function downloadMapping() {
+  const mappingData = {
+    version: '5.0',
+    created: new Date().toISOString(),
+    totalScenes: sceneOrder.length,
+    totalChunks: chunkMapping.length,
+    chunkSize: parseInt(document.getElementById('chunkSize').value) || 1500,
+    chunks: chunkMapping
+  };
+  const blob = new Blob([JSON.stringify(mappingData, null, 2)], { type: 'application/json' });
+  autoDownloadFile(blob, `scene_mapping_${new Date().toISOString().slice(0,10)}.json`);
+  addLog('씬 매핑 JSON 다운로드 완료', 'ok');
+}
+
 // ─── ZIP 다운로드 ───
 async function downloadZip() {
   const zip = new JSZip();
-  const mapping = {};
 
   for (const [fileNum, data] of Object.entries(audioBlobs)) {
     zip.file(`${fileNum}.wav`, data.audio);
-    mapping[fileNum] = { text: data.text, chars: data.text.length };
   }
 
-  zip.file('mapping.json', JSON.stringify(mapping, null, 2));
-  const fullScript = chunks.join('\n\n---\n\n');
-  zip.file('script_clean.txt', fullScript);
+  // 매핑 JSON 포함
+  const mappingData = {
+    version: '5.0',
+    created: new Date().toISOString(),
+    totalScenes: sceneOrder.length,
+    totalChunks: chunkMapping.length,
+    chunkSize: parseInt(document.getElementById('chunkSize').value) || 1500,
+    chunks: chunkMapping
+  };
+  zip.file('scene_mapping.json', JSON.stringify(mappingData, null, 2));
+
+  // 원본 씬 JSON도 포함
+  zip.file('scenes_original.json', JSON.stringify(scenes, null, 2));
 
   const content = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(content);
-  a.download = `gd_tts_output_${new Date().toISOString().slice(0,10)}.zip`;
+  a.download = `gd_tts_v5_${new Date().toISOString().slice(0,10)}.zip`;
   a.click();
-  addLog('ZIP 다운로드 완료', 'ok');
+  addLog('ZIP 다운로드 완료 (WAV + 씬 매핑 + 원본 씬)', 'ok');
 }
 </script>
 
